@@ -24,7 +24,8 @@ export class SirenNav {
      * 
      * @memberOf SirenNav
      */
-    static create(url: string, base: string, cache: Cache) {
+    static create(url: string, base: string, cache?: Cache) {
+        if (!cache) cache = new Cache();
         return new SirenNav(Promise.resolve(new NavState(url, base, {
             baseURL: base,
         }, cache.getOr(url))), [], cache);
