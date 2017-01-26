@@ -1,4 +1,4 @@
-= Overview
+# Overview
 
 This package contains utilities for navigating and interacting with Siren based
 APIs.  The central idea in this approach is that it should be possible to chain 
