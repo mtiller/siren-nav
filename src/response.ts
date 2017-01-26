@@ -23,6 +23,11 @@ export class NavResponse {
         return resp.data as Entity<T>;
     }
 
+    async asJson<T extends {}>(): Promise<T> {
+        let resp = await this.resp;
+        return resp.data as T;
+    }
+
     followLocation(): SirenNav {
         return this.nav.do(async (state: NavState, cache: Cache, debug: boolean) => {
             if (debug) console.log("Following Location header");
