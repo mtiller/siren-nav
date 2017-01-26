@@ -1,11 +1,12 @@
 {
   "name": "siren-nav",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "A library for navigating Siren APIs",
   "main": "lib/src/index.js",
   "typings": "lib/src/index.d.ts",
   "scripts": {
     "compile": "tsc",
+    "prepublish": "tsc",
     "test": "mocha"
   },
   "keywords": [
