@@ -33,24 +33,30 @@ export function performAction<T>(name: string, body: T): Request {
                     throw new Error("No href for action " + name);
                 }
                 let url = action.href;
-                let data: any = body;
                 // If no action type was given or if they specifically asked for url encoding, 
                 // add data as a url encoded query string.
                 // TODO: suppor some kind of flattening or other convention for marshalling objects 
                 // in this way?
+
+                let req: Axios.AxiosXHRConfig<{}> = { ...state.config, method: method.toLowerCase(), url: url, data: body };
                 if (!action.type || action.type.toLowerCase() == "application/x-www-form-urlencoded") {
                     let args: string[] = [];
-                    data = undefined;
                     if (body && (typeof body == "object")) {
                         args = Object.keys(body).map((key) => encodeURIComponent(key) + "=" + encodeURIComponent(body[key]));
                     }
                     if (args.length > 0) {
                         url = url + "?" + args.join("&");
                     }
+                    req = { ...state.config, method: method.toLowerCase(), url: url };
                 }
                 if (debug) console.log("    Making a " + method.toUpperCase() + " request to " + url);
-                if (debug) console.log("      Data: ", data);
-                return Promise.resolve(axios.request({ ...state.config, method: method.toLowerCase(), url: url, data: data }));
+                if (debug) console.log("      Request: ", req);
+                let p = Promise.resolve(axios.request(req));
+                if (debug) {
+                    p.then((v) => console.log("      Response: ", v));
+                    p.catch((e) => console.log("      Failed with: ", e));
+                }
+                return p;
             }
         }
         throw new Error("Unknown action '" + name + "', choices were " + siren.actions.map((a) => a.name).join(", "));
