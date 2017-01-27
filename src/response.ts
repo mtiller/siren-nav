@@ -35,6 +35,11 @@ export class NavResponse {
         throw new Error("Response data was neither an ArrayBuffer nor a string");
     }
 
+    async asRaw(): Promise<any> {
+        let resp = await this.resp;
+        return resp;
+    }
+
     followLocation(): SirenNav {
         return this.nav.do(async (state: NavState, cache: Cache, debug: boolean) => {
             if (debug) console.log("Following Location header");
