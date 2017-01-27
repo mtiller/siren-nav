@@ -32,7 +32,8 @@ export class NavResponse {
         let resp = await this.resp;
         if (resp.data instanceof ArrayBuffer) return resp.data;
         if (typeof resp.data == "string") return resp.data;
-        throw new Error("Response data was neither an ArrayBuffer nor a string");
+        if (typeof resp.data == "object") return JSON.stringify(resp.data);
+        throw new Error("Response data was neither an ArrayBuffer nor a string nor JSON");
     }
 
     async asRaw(): Promise<any> {
