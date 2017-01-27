@@ -28,6 +28,13 @@ export class NavResponse {
         return resp.data as T;
     }
 
+    async asBuffer(): Promise<ArrayBuffer | string> {
+        let resp = await this.resp;
+        if (resp.data instanceof ArrayBuffer) return resp.data;
+        if (typeof resp.data == "string") return resp.data;
+        throw new Error("Response data was neither an ArrayBuffer nor a string");
+    }
+
     followLocation(): SirenNav {
         return this.nav.do(async (state: NavState, cache: Cache, debug: boolean) => {
             if (debug) console.log("Following Location header");

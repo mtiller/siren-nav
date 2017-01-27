@@ -73,7 +73,7 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     performHyperAction<P extends {}>(name: string, body: Entity<P>, debug?: boolean): NavResponse {
-        return this.performAction(name, body, debug || false);
+        return this.performAction(name, body, debug);
     }
 
     /**
