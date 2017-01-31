@@ -5,6 +5,8 @@ import { Entity } from 'siren-types';
 import { NavResponse } from './response';
 import { performAction, getRequest } from './requests';
 
+import parse = require('url-parse');
+
 /**
  * The SirenNav class provides a collection of methods that allow for 
  * a high-level declarative based approach to API navigation.
@@ -127,7 +129,7 @@ export class SirenNav {
      * 
      * @memberOf SirenNav
      */
-    sqaush(debug?: boolean): SirenNav {
+    squash(debug?: boolean): SirenNav {
         return new SirenNav(reduce(this.start, this.steps, this.cache, debug || false), [], this.cache);
     }
 
@@ -155,8 +157,8 @@ export class SirenNav {
      * call will add an additional option.  As with the Accept header itself, order 
      * matters.
      */
-    accept(ctype: string): SirenNav {
-        return this.do(accept(ctype));
+    accept(ctype: string, debug?: boolean): SirenNav {
+        return this.do(accept(ctype, debug || false));
     }
 
     /**
@@ -168,7 +170,12 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     getURL(debug?: boolean) {
-        return reduce(this.start, this.steps, this.cache, debug || false).then((state) => state.cur);
+        return reduce(this.start, this.steps, this.cache, debug || false).then((state) => {
+            if (state.config.baseURL) {
+                return parse(state.cur, state.config.baseURL).toString();
+            }
+            return state.cur;
+        });
     }
 
     /**

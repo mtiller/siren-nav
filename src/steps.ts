@@ -12,18 +12,20 @@ export async function reduce(cur: Promise<NavState>, steps: Step[], cache: Cache
     return reduce(steps[0](state, cache, debug), steps.slice(1), cache, debug);
 }
 
-export function accept(ctype: string): Step {
-    return async (state: NavState, cache: Cache, debug: boolean): Promise<NavState> => {
+export function accept(ctype: string, debug?: boolean): Step {
+    return async (state: NavState, cache: Cache): Promise<NavState> => {
         if (debug) console.log("Fetching data accepting only '" + ctype + "' as content type");
         if (debug) console.log("  Resource: " + state.cur);
         let newconfig = { ...state.config };
         if (!newconfig.headers) newconfig.headers = {};
 
         if (newconfig.headers.hasOwnProperty("Accept")) {
+            if (debug) console.log("  Current value of Accept: ", newconfig.headers["Accept"]);
             newconfig.headers["Accept"] += ", " + ctype
         } else {
             newconfig.headers["Accept"] = ctype;
         }
+        if (debug) console.log("  Updated value of Accept: ", newconfig.headers["Accept"]);
         return new NavState(state.cur, state.root, newconfig, cache.getOr(state.cur));
     }
 }
