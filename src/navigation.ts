@@ -1,6 +1,6 @@
 import { NavState } from './state';
 import { Cache } from './cache';
-import { follow, Step, reduce, accept } from './steps';
+import { follow, Step, reduce, accept, auth } from './steps';
 import { Entity } from 'siren-types';
 import { NavResponse } from './response';
 import { performAction, getRequest } from './requests';
@@ -159,6 +159,13 @@ export class SirenNav {
      */
     accept(ctype: string, debug?: boolean): SirenNav {
         return this.do(accept(ctype, debug || false));
+    }
+
+    /**
+     * Authorize requests using the given scheme and token
+     */
+    auth(scheme: string, token: string, debug?: boolean): SirenNav {
+        return this.do(auth(scheme, token, debug || false));
     }
 
     /**

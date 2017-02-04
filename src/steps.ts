@@ -30,6 +30,19 @@ export function accept(ctype: string, debug?: boolean): Step {
     }
 }
 
+export function auth(scheme: string, token: string, debug?: boolean): Step {
+    return async (state: NavState, cache: Cache): Promise<NavState> => {
+        if (debug) console.log("Fetching data under scheme "+scheme+" using token "+token);
+        if (debug) console.log("  Resource: " + state.cur);
+        let newconfig = { ...state.config };
+        if (!newconfig.headers) newconfig.headers = {};
+
+        newconfig.headers["Authorization"] = scheme+" "+token;
+        if (debug) console.log("  Updated value of Authorization: ", newconfig.headers["Authorization"]);
+        return new NavState(state.cur, state.root, newconfig, cache.getOr(state.cur));
+    }
+}
+
 export function follow(rel: string, first?: boolean): Step {
     return (state: NavState, cache: Cache, debug: boolean): Promise<NavState> => {
         return getSiren(state).then((siren) => {
