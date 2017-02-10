@@ -32,12 +32,12 @@ export function accept(ctype: string, debug?: boolean): Step {
 
 export function auth(scheme: string, token: string, debug?: boolean): Step {
     return async (state: NavState, cache: Cache): Promise<NavState> => {
-        if (debug) console.log("Fetching data under scheme "+scheme+" using token "+token);
+        if (debug) console.log("Fetching data under scheme " + scheme + " using token " + token);
         if (debug) console.log("  Resource: " + state.cur);
         let newconfig = { ...state.config };
         if (!newconfig.headers) newconfig.headers = {};
 
-        newconfig.headers["Authorization"] = scheme+" "+token;
+        newconfig.headers["Authorization"] = scheme + " " + token;
         if (debug) console.log("  Updated value of Authorization: ", newconfig.headers["Authorization"]);
         return new NavState(state.cur, state.root, newconfig, cache.getOr(state.cur));
     }
@@ -62,18 +62,29 @@ export function follow(rel: string, first?: boolean): Step {
                     }
                 }
             });
-            (siren.links || []).forEach((link: Link) => {
+            let links = siren.links || [];
+            links.forEach((link: Link) => {
                 if (link.rel.indexOf(rel) == -1) return;
                 if (debug) console.log("  Found possible match among links");
                 possible.push(new NavState(link.href, state.root, state.config, cache.getOr(link.href)));
             });
             if (possible.length == 0) {
-                console.error("Cannot follow relation '" + rel + "', no links with that relation in ", siren);
-                throw new Error("Cannot follow relation '" + rel + "', no links with that relation in " + JSON.stringify(siren, null, 4));
+                if (links.length < 20) {
+                    console.error("Cannot follow relation '" + rel + "', no links with that relation in ", links);
+                    throw new Error("Cannot follow relation '" + rel + "', no links with that relation in " + JSON.stringify(links, null, 4));
+                } else {
+                    console.error("Cannot follow relation '" + rel + "', no links with that relation");
+                    throw new Error("Cannot follow relation '" + rel + "', no links with that relation");
+                }
             }
             if (possible.length > 1 && !first) {
-                console.error("Multiple links with relation '" + rel + "' found when only one was expected in ", siren);
-                throw new Error("Multiple links with relation '" + rel + "' found when only one was expected in " + JSON.stringify(siren, null, 4));
+                if (links.length < 20) {
+                    console.error("Multiple links with relation '" + rel + "' found when only one was expected in ", links);
+                    throw new Error("Multiple links with relation '" + rel + "' found when only one was expected in " + JSON.stringify(links, null, 4));
+                } else {
+                    console.error("Multiple links with relation '" + rel + "' found when only one was expected");
+                    throw new Error("Multiple links with relation '" + rel + "' found when only one was expected");
+                }
             }
             if (debug) console.log("  Found match, resulting state: " + JSON.stringify(possible[0]));
             return possible[0];
