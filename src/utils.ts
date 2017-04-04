@@ -1,6 +1,6 @@
 import { Siren } from 'siren-types';
 import { NavState } from './state';
-import axios = require('axios');
+import axios from 'axios';
 
 export function getSelf(v: Siren): string | null {
     if (!v.links) return null;
@@ -14,5 +14,5 @@ export function getSelf(v: Siren): string | null {
 
 export function getSiren(state: NavState): Promise<Siren> {
     if (state.value) return Promise.resolve(state.value);
-    return Promise.resolve(axios.get<Siren>(state.cur)).then((resp) => resp.data);
+    return Promise.resolve(axios.get(state.cur)).then((resp) => resp.data as Siren);
 }

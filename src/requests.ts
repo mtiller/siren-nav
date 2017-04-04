@@ -1,6 +1,7 @@
 import { NavState } from './state';
 import { Siren } from 'siren-types';
-import axios = require('axios');
+import axios from 'axios';
+import { AxiosResponse } from 'axios';
 
 export interface ResponseData {
     data: any,
@@ -11,7 +12,7 @@ export interface ResponseData {
 export type Request = (cur: NavState, debug: boolean) => Promise<ResponseData>;
 
 export function performAction<T>(name: string, body: T): Request {
-    return async (state: NavState, debug: boolean): Promise<Axios.AxiosXHR<{}>> => {
+    return async (state: NavState, debug: boolean): Promise<AxiosResponse> => {
         if (debug) console.log("Performing action " + name + " on " + state.cur);
         if (debug) console.log("  Fetching latest version of " + state.cur);
         let resp = await axios.get(state.cur, state.config);

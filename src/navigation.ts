@@ -186,7 +186,7 @@ export class SirenNav {
      * 
      * @memberOf SirenNav
      */
-    getURL(debug?: boolean) {
+    getURL(debug?: boolean): Promise<string> {
         return reduce(this.start, [...this.steps, ...this.omni], this.cache, debug || false).then((state) => {
             if (state.config.baseURL) {
                 return parse(state.cur, state.config.baseURL).toString();
