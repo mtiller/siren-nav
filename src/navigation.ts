@@ -30,7 +30,7 @@ export class SirenNav {
         if (!cache) cache = new Cache();
         return new SirenNav(Promise.resolve(new NavState(url, base, {
             baseURL: base,
-        }, cache.getOr(url))), [], cache);
+        }, cache.getOr(url))), [], [], cache);
     }
 
     /**
@@ -44,7 +44,7 @@ export class SirenNav {
      * 
      * @memberOf SirenNav
      */
-    private constructor(private start: Promise<NavState>, private steps: Step[], private cache: Cache) {
+    private constructor(private start: Promise<NavState>, private steps: Step[], private omni: Step[], private cache: Cache) {
     }
 
     /**
@@ -89,7 +89,7 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     performAction<P>(name: string, body: P, debug?: boolean): NavResponse {
-        let state = reduce(this.start, this.steps, this.cache, debug || false);
+        let state = reduce(this.start, [...this.steps, ...this.omni], this.cache, debug || false);
         let resp = state.then((s) => performAction(name, body)(s, debug || false));
         return NavResponse.create(resp, this);
     }
@@ -106,7 +106,16 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     do(step: Step): SirenNav {
-        return new SirenNav(this.start, [...this.steps, step], this.cache);
+        return new SirenNav(this.start, [...this.steps, step], [...this.omni], this.cache);
+    }
+
+    /**
+     * Perform a step that should *always* be performed.  These omni steps are done
+     * after the navigation steps.  This is also an internal method, but it is made
+     * public to allow extensions.
+     */
+    doOmni(step: Step): SirenNav {
+        return new SirenNav(this.start, [...this.steps], [...this.omni, step], this.cache);        
     }
 
     /**
@@ -130,7 +139,8 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     squash(debug?: boolean): SirenNav {
-        return new SirenNav(reduce(this.start, this.steps, this.cache, debug || false), [], this.cache);
+        // NB - Note that we do NOT squash the omni steps.  Those remain.
+        return new SirenNav(reduce(this.start, this.steps, this.cache, debug || false), [], [...this.omni], this.cache);
     }
 
     /**
@@ -149,7 +159,7 @@ export class SirenNav {
             let state = await this.start;
             resolve(new NavState(url, state.root, state.config, this.cache.getOr(url)));
         })
-        return new SirenNav(newstate, [], this.cache);
+        return new SirenNav(newstate, [], [...this.omni], this.cache);
     }
 
     /**
@@ -177,7 +187,7 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     getURL(debug?: boolean) {
-        return reduce(this.start, this.steps, this.cache, debug || false).then((state) => {
+        return reduce(this.start, [...this.steps, ...this.omni], this.cache, debug || false).then((state) => {
             if (state.config.baseURL) {
                 return parse(state.cur, state.config.baseURL).toString();
             }
@@ -194,7 +204,7 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     get(debug?: boolean): NavResponse {
-        let state = reduce(this.start, this.steps, this.cache, debug || false);
+        let state = reduce(this.start, [...this.steps, ...this.omni], this.cache, debug || false);
         let resp = state.then((s) => getRequest(s, debug || false));
         return NavResponse.create(resp, this);
     }
