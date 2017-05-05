@@ -14,5 +14,5 @@ export function getSelf(v: Siren): string | null {
 
 export function getSiren(state: NavState): Promise<Siren> {
     if (state.value) return Promise.resolve(state.value);
-    return Promise.resolve(axios.get(state.cur)).then((resp) => resp.data as Siren);
+    return Promise.resolve(axios.get(state.cur, state.config)).then((resp) => resp.data as Siren);
 }
