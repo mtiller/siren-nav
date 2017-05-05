@@ -14,7 +14,7 @@ export type Request = (cur: NavState, debug: boolean) => Promise<ResponseData>;
 export function performAction<T>(name: string, body: T): Request {
     return async (state: NavState, debug: boolean): Promise<AxiosResponse> => {
         if (debug) console.log("Performing action " + name + " on " + state.cur);
-        if (debug) console.log("  Fetching latest version of " + state.cur);
+        if (debug) console.log("  Fetching latest version of " + state.cur + " with config " + JSON.stringify(state.config));
         let resp = await axios.get(state.cur, state.config);
         let siren: Siren = resp.data as Siren;
         if (debug) console.log("  Latest value of " + state.cur + ": ", siren);
@@ -51,8 +51,8 @@ export function performAction<T>(name: string, body: T): Request {
                         url = url + "?" + args.join("&");
                     }
                 }
-                if (debug) console.log("    Making a " + method.toUpperCase() + " request to " + url);
-                return Promise.resolve(axios.request({ ...state.config, method: method.toLowerCase(), url: url, data: data }));
+                if (debug) console.log("    Making a " + method.toUpperCase() + " request to " + url + " with config " + JSON.stringify(state.config));
+                return Promise.resolve(axios.request({ ...state.config, baseURL: state.config.baseURL, method: method.toLowerCase(), url: url, data: data }));
             }
         }
         throw new Error("Unknown action '" + name + "', choices were " + siren.actions.map((a) => a.name).join(", "));
@@ -65,7 +65,7 @@ export const getRequest: Request = async (state: NavState, debug: boolean): Prom
         if (debug) console.log("  Using cached copy: " + JSON.stringify(state.value));
         return Promise.resolve<ResponseData>({ data: state.value, headers: {}, status: 200 });
     }
-    if (debug) console.log("  Fetching latest resource at " + state.cur);
+    if (debug) console.log("  Fetching latest resource at " + state.cur + " with config " + JSON.stringify(state.config));
     return axios.get(state.cur, state.config).then((v) => {
         if (debug) console.log("  ResponseData for " + state.cur + ":", v);
         return v;

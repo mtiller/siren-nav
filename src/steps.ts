@@ -58,7 +58,7 @@ export function follow(rel: string, first?: boolean): Step {
                     let self = getSelf(entity);
                     if (self) {
                         if (debug) console.log("  Found possible match in subentity resource");
-                        possible.push(new NavState(self, state.root, entity, cache.getOr(self)));
+                        possible.push(new NavState(self, state.root, state.config, cache.getOr(self)));
                     }
                 }
             });
