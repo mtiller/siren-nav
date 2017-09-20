@@ -13,7 +13,7 @@ export class Cache {
     }
     get(uri: string): Siren {
         if (this.has(uri)) return this.cache[uri];
-        throw new Error("Requested uncached resource: "+uri);
+        throw new Error("Requested uncached resource: " + uri);
     }
     getOr(uri: string): Siren | null {
         if (this.has(uri)) return this.cache[uri];

@@ -4,6 +4,7 @@ import { follow, Step, reduce, accept, auth } from './steps';
 import { Entity } from 'siren-types';
 import { NavResponse } from './response';
 import { performAction, getRequest } from './requests';
+import { sirenContentType } from 'siren-types';
 
 import parse = require('url-parse');
 
@@ -30,6 +31,9 @@ export class SirenNav {
         if (!cache) cache = new Cache();
         return new SirenNav(Promise.resolve(new NavState(url, base, {
             baseURL: base,
+            headers: {
+                "Accept": sirenContentType, // Assume siren unless the user overrides it
+            },
         }, cache.getOr(url))), [], [], cache);
     }
 
@@ -115,7 +119,7 @@ export class SirenNav {
      * public to allow extensions.
      */
     doOmni(step: Step): SirenNav {
-        return new SirenNav(this.start, [...this.steps], [...this.omni, step], this.cache);        
+        return new SirenNav(this.start, [...this.steps], [...this.omni, step], this.cache);
     }
 
     /**

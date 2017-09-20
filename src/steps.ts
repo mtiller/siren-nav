@@ -20,8 +20,9 @@ export function accept(ctype: string, debug?: boolean): Step {
         if (!newconfig.headers) newconfig.headers = {};
 
         if (newconfig.headers.hasOwnProperty("Accept")) {
-            if (debug) console.log("  Current value of Accept: ", newconfig.headers["Accept"]);
-            newconfig.headers["Accept"] += ", " + ctype
+            let cur = newconfig.headers["Accept"];
+            if (debug) console.log("  Current value of Accept: ", cur);
+            newconfig.headers["Accept"] = ctype + ", " + cur;
         } else {
             newconfig.headers["Accept"] = ctype;
         }
