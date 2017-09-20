@@ -22,9 +22,11 @@ export function accept(ctype: string, debug?: boolean): Step {
         if (newconfig.headers.hasOwnProperty("Accept")) {
             let cur = newconfig.headers["Accept"];
             if (debug) console.log("  Current value of Accept: ", cur);
-            newconfig.headers["Accept"] = ctype + ", " + cur;
+            // NB - We must create a new header object!
+            newconfig.headers = { ...state.config.headers, Accept: ctype + ", " + cur };
         } else {
-            newconfig.headers["Accept"] = ctype;
+            // NB - We must create a new header object!
+            newconfig.headers = { ...state.config.headers, Accept: ctype };
         }
         if (debug) console.log("  Updated value of Accept: ", newconfig.headers["Accept"]);
         return new NavState(state.cur, state.root, newconfig, cache.getOr(state.cur));
@@ -38,7 +40,8 @@ export function auth(scheme: string, token: string, debug?: boolean): Step {
         let newconfig = { ...state.config };
         if (!newconfig.headers) newconfig.headers = {};
 
-        newconfig.headers["Authorization"] = scheme + " " + token;
+        // NB - We must create a new header object!
+        newconfig.headers = { ...state.config.headers, Authorization: scheme + " " + token };
         if (debug) console.log("  Updated value of Authorization: ", newconfig.headers["Authorization"]);
         return new NavState(state.cur, state.root, newconfig, cache.getOr(state.cur));
     }
