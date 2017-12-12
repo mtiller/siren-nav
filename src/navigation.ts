@@ -1,4 +1,4 @@
-import { NavState } from './state';
+import { NavState, Config } from './state';
 import { Cache } from './cache';
 import { follow, Step, reduce, accept, auth } from './steps';
 import { Entity } from 'siren-types';
@@ -27,13 +27,16 @@ export class SirenNav {
      * 
      * @memberOf SirenNav
      */
-    static create(url: string, base: string, cache?: Cache) {
+    static create(url: string, base: string, cache?: Cache, config?: Config) {
         if (!cache) cache = new Cache();
+        config = config || {};
         return new SirenNav(Promise.resolve(new NavState(url, base, {
             baseURL: base,
             headers: {
                 "Accept": sirenContentType, // Assume siren unless the user overrides it
             },
+            withCredentials: true,
+            ...config,
         }, cache.getOr(url))), [], [], cache);
     }
 
