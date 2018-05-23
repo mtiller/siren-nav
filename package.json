@@ -1,6 +1,6 @@
 {
     "name": "siren-nav",
-    "version": "1.1.0",
+    "version": "1.2.0-rc2",
     "description": "A library for navigating Siren APIs",
     "main": "lib/src/index.js",
     "typings": "lib/src/index.d.ts",
@@ -9,7 +9,10 @@
         "prepublish": "tsc",
         "test": "mocha"
     },
-    "keywords": ["siren", "http"],
+    "keywords": [
+        "siren",
+        "http"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/xogeny/siren-nav.git"
@@ -17,11 +20,13 @@
     "author": "Michael M. Tiller",
     "license": "MIT",
     "devDependencies": {
+        "@types/debug": "^0.0.30",
         "ts-node": "^2.0.0",
         "typescript": "^2.1.5"
     },
     "dependencies": {
         "axios": "^0.16.0",
+        "debug": "^3.1.0",
         "siren-types": "^0.2.3",
         "url-parse": "^1.1.7"
     }
