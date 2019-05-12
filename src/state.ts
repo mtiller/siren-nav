@@ -1,6 +1,7 @@
 import { Siren } from "siren-types";
 import { AxiosRequestConfig } from "axios";
-import URI from "urijs";
+
+import * as URI from "urijs/src/URITemplate";
 
 export type Config = AxiosRequestConfig;
 
@@ -13,6 +14,10 @@ export class NavState {
         public config: Config,
         public value: Siren | null,
     ) {
-        this.cur = parameters ? URI.expand(href, parameters).toString() : href;
+        this.cur = parameters
+            ? URI(href)
+                  .expand(parameters)
+                  .toString()
+            : href;
     }
 }

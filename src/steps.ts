@@ -64,10 +64,6 @@ export function follow(rel: string, parameters: {} | undefined, which?: (states:
                 } else {
                     let self = getSelf(entity);
                     if (self) {
-                        if (parameters) {
-                            debugSteps("Applying %j to template %s", parameters, self);
-                            self = URI.expand(self, parameters).toString();
-                        }
                         debugSteps("  Found possible match in subentity resource, self = %s", self);
                         possible.push(new NavState(self, parameters, state.root, state.config, cache.getOr(self)));
                     }

@@ -19,7 +19,7 @@
         "noUnusedLocals": true,
         "noImplicitThis": true,
         "noImplicitReturns": true,
-        "allowSyntheticDefaultImports": true,
+        "allowSyntheticDefaultImports": false,
         "suppressImplicitAnyIndexErrors": true
     },
     "exclude": ["node_modules", "lib"]

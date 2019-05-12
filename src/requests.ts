@@ -3,6 +3,8 @@ import { Siren } from "siren-types";
 import axios from "axios";
 import { AxiosResponse } from "axios";
 
+import * as URI from "urijs/src/URITemplate";
+
 import * as debug from "debug";
 const debugRequests = debug("siren-nav:requests");
 
@@ -39,7 +41,9 @@ export function performAction<T>(name: string, body: T, parameters?: {}): Reques
                 }
                 let url = action.href;
                 if (parameters) {
-                    url = URI.expand(url, parameters).toString();
+                    url = URI(url)
+                        .expand(parameters)
+                        .toString();
                 }
 
                 let data: T | undefined = body;

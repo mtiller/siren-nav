@@ -6,7 +6,7 @@ import { NavResponse } from "./response";
 import { performAction, getRequest } from "./requests";
 import { sirenContentType } from "siren-types";
 
-import URI from "urijs";
+import { joinPaths } from "urijs";
 
 /**
  * The SirenNav class provides a collection of methods that allow for
@@ -216,7 +216,7 @@ export class SirenNav {
     getURL(): Promise<string> {
         return reduce(this.start, [...this.steps, ...this.omni], this.cache).then(state => {
             if (state.config.baseURL) {
-                return URI(state.cur)
+                return joinPaths(state.cur)
                     .absoluteTo(state.config.baseURL)
                     .toString();
             }
