@@ -7,7 +7,7 @@
     "scripts": {
         "compile": "tsc",
         "prepublish": "tsc",
-        "test": "mocha"
+        "test": "jest"
     },
     "keywords": [
         "siren",
@@ -21,13 +21,18 @@
     "license": "MIT",
     "devDependencies": {
         "@types/debug": "^0.0.30",
+        "@types/urijs": "^1.19.0",
         "ts-node": "^2.0.0",
         "typescript": "3.1.6"
     },
     "dependencies": {
+        "@types/jest": "^24.0.12",
         "axios": "^0.16.0",
         "debug": "^3.1.0",
+        "jest": "^24.8.0",
         "siren-types": "1.0.0-rc4",
+        "ts-jest": "^24.0.2",
+        "urijs": "^1.19.1",
         "url-parse": "^1.1.7"
     }
 }

@@ -6,7 +6,7 @@ import { NavResponse } from "./response";
 import { performAction, getRequest } from "./requests";
 import { sirenContentType } from "siren-types";
 
-import parse = require("url-parse");
+import URI from "urijs";
 
 /**
  * The SirenNav class provides a collection of methods that allow for
@@ -212,7 +212,9 @@ export class SirenNav {
     getURL(): Promise<string> {
         return reduce(this.start, [...this.steps, ...this.omni], this.cache).then(state => {
             if (state.config.baseURL) {
-                return parse(state.cur, state.config.baseURL).toString();
+                return URI(state.cur)
+                    .absoluteTo(state.config.baseURL)
+                    .toString();
             }
             return state.cur;
         });
