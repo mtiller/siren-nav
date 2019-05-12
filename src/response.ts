@@ -51,7 +51,7 @@ export class NavResponse {
         return resp;
     }
 
-    followLocation(): SirenNav {
+    followLocation(parameters?: {}): SirenNav {
         return this.nav.do(async (state: NavState, cache: Cache) => {
             debugResponses("Following Location header");
             let resp = await this.resp;
@@ -64,7 +64,7 @@ export class NavResponse {
             } else {
                 debugResponses("  Location header: %s", location);
             }
-            return new NavState(location, state.root, state.config, cache.getOr(location));
+            return new NavState(location, parameters, state.root, state.config, cache.getOr(location));
         });
     }
 }
