@@ -14,7 +14,7 @@ export interface ResponseData {
 
 export type Request = (cur: NavState) => Promise<ResponseData>;
 
-export function performAction<T>(name: string, body: T): Request {
+export function performAction<T>(name: string, body: T, parameters?: {}): Request {
     return async (state: NavState): Promise<AxiosResponse> => {
         debugRequests("Performing action %s on %s", name, state.cur);
         debugRequests("  Fetching latest version of %s with config %j", state.cur, state.config);
@@ -38,6 +38,9 @@ export function performAction<T>(name: string, body: T): Request {
                     throw new Error("No href for action " + name);
                 }
                 let url = action.href;
+                if (parameters) {
+                    url = URI.expand(url, parameters).toString();
+                }
 
                 let data: T | undefined = body;
 

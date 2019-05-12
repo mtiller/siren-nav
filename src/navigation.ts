@@ -34,13 +34,17 @@ export class SirenNav {
             Promise.resolve(
                 new NavState(
                     url,
+                    undefined,
                     base,
                     {
                         baseURL: base,
                         headers: {
                             Accept: sirenContentType, // Assume siren unless the user overrides it
                         },
-                        withCredentials: true,
+                        // Commented out because it causes problems with HTTPS
+                        // APIs that don't require authentication (for reasons
+                        // I'm not 100% sure about).
+                        // withCredentials: true,
                         ...config,
                     },
                     cache.getOr(url),
@@ -82,8 +86,8 @@ export class SirenNav {
      *
      * @memberOf SirenNav
      */
-    follow(rel: string, first?: boolean): SirenNav {
-        return this.do(follow(rel, first));
+    follow(rel: string, parameters?: {}, which?: (states: NavState[]) => NavState): SirenNav {
+        return this.do(follow(rel, parameters, which));
     }
 
     /**
@@ -177,10 +181,10 @@ export class SirenNav {
      *
      * @memberOf SirenNav
      */
-    goto(url: string): SirenNav {
+    goto(url: string, parameters?: {}): SirenNav {
         let newstate = new Promise<NavState>(async (resolve, reject) => {
             let state = await this.start;
-            resolve(new NavState(url, state.root, state.config, this.cache.getOr(url)));
+            resolve(new NavState(url, parameters, state.root, state.config, this.cache.getOr(url)));
         });
         return new SirenNav(newstate, [], [...this.omni], this.cache);
     }

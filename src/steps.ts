@@ -32,7 +32,7 @@ export function accept(ctype: string): Step {
             newconfig.headers = { ...state.config.headers, Accept: ctype };
         }
         debugSteps("  Updated value of Accept: %s", newconfig.headers["Accept"]);
-        return new NavState(state.cur, state.root, newconfig, cache.getOr(state.cur));
+        return new NavState(state.cur, undefined, state.root, newconfig, cache.getOr(state.cur));
     };
 }
 
@@ -46,11 +46,11 @@ export function auth(scheme: string, token: string): Step {
         // NB - We must create a new header object!
         newconfig.headers = { ...state.config.headers, Authorization: scheme + " " + token };
         debugSteps("  Updated value of Authorization: %s", newconfig.headers["Authorization"]);
-        return new NavState(state.cur, state.root, newconfig, cache.getOr(state.cur));
+        return new NavState(state.cur, undefined, state.root, newconfig, cache.getOr(state.cur));
     };
 }
 
-export function follow(rel: string, first?: boolean): Step {
+export function follow(rel: string, parameters: {} | undefined, which?: (states: NavState[]) => NavState): Step {
     return (state: NavState, cache: Cache): Promise<NavState> => {
         return getSiren(state).then(siren => {
             debugSteps("Follow '%s':", rel);
@@ -60,12 +60,16 @@ export function follow(rel: string, first?: boolean): Step {
                 if (entity.hasOwnProperty("href")) {
                     let href = entity["href"];
                     debugSteps("  Found possible match in subentity link, href = %s", href);
-                    possible.push(new NavState(href, state.root, state.config, cache.getOr(href)));
+                    possible.push(new NavState(href, parameters, state.root, state.config, cache.getOr(href)));
                 } else {
                     let self = getSelf(entity);
                     if (self) {
+                        if (parameters) {
+                            debugSteps("Applying %j to template %s", parameters, self);
+                            self = URI.expand(self, parameters).toString();
+                        }
                         debugSteps("  Found possible match in subentity resource, self = %s", self);
-                        possible.push(new NavState(self, state.root, state.config, cache.getOr(self)));
+                        possible.push(new NavState(self, parameters, state.root, state.config, cache.getOr(self)));
                     }
                 }
             });
@@ -73,24 +77,14 @@ export function follow(rel: string, first?: boolean): Step {
             links.forEach((link: Link) => {
                 if (link.rel.indexOf(rel) == -1) return;
                 debugSteps("  Found possible match among links: %j", link);
-                possible.push(new NavState(link.href, state.root, state.config, cache.getOr(link.href)));
+                possible.push(new NavState(link.href, parameters, state.root, state.config, cache.getOr(link.href)));
             });
             if (possible.length == 0) {
-                if (links.length < 20) {
-                    console.error("Cannot follow relation '" + rel + "', no links with that relation in ", links);
-                    throw new Error(
-                        "Cannot follow relation '" +
-                            rel +
-                            "', no links with that relation in " +
-                            JSON.stringify(links, null, 4),
-                    );
-                } else {
-                    console.error("Cannot follow relation '" + rel + "', no links with that relation");
-                    throw new Error("Cannot follow relation '" + rel + "', no links with that relation");
-                }
+                console.error("Cannot follow relation '" + rel + "', no links with that relation");
+                throw new Error("Cannot follow relation '" + rel + "', no links with that relation");
             }
-            if (possible.length > 1 && !first) {
-                if (links.length < 20) {
+            if (possible.length > 1) {
+                if (!which) {
                     console.error(
                         "Multiple links with relation '" + rel + "' found when only one was expected in ",
                         links,
@@ -102,8 +96,7 @@ export function follow(rel: string, first?: boolean): Step {
                             JSON.stringify(links, null, 4),
                     );
                 } else {
-                    console.error("Multiple links with relation '" + rel + "' found when only one was expected");
-                    throw new Error("Multiple links with relation '" + rel + "' found when only one was expected");
+                    return which(possible);
                 }
             }
             debugSteps("  Found match, resulting state: %j", possible[0]);
