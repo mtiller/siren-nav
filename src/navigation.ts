@@ -27,27 +27,19 @@ export class SirenNav {
      *
      * @memberOf SirenNav
      */
-    static create(url: string, base?: string, cache?: Cache, config?: Config) {
+    static create(url: string, cache?: Cache, config?: Config) {
         if (!cache) cache = new Cache();
         config = config || {};
         const uri = URI(url);
-        if (!base) {
-            if (uri.is("absolute")) {
-                const baseUri = uri.clone();
-                baseUri.path("/");
-                base = baseUri.toString();
-            } else {
-                throw new Error("When no base is provided, the URL (" + url + ") must be absolute");
-            }
+        if (uri.is("relative")) {
+            throw new Error("SirenNav must be created with an absolute URL");
         }
         return new SirenNav(
             Promise.resolve(
                 new NavState(
                     url,
                     undefined,
-                    base,
                     {
-                        baseURL: base,
                         headers: {
                             Accept: sirenContentType, // Assume siren unless the user overrides it
                         },
@@ -194,7 +186,7 @@ export class SirenNav {
     goto(url: string, parameters?: {}): SirenNav {
         let newstate = new Promise<NavState>(async (resolve, reject) => {
             let state = await this.start;
-            resolve(new NavState(url, parameters, state.root, state.config, this.cache.getOr(url)));
+            resolve(new NavState(state.rebase(url), parameters, state.config, this.cache.getOr(url)));
         });
         return new SirenNav(newstate, [], [...this.omni], this.cache);
     }

@@ -64,7 +64,8 @@ export class NavResponse {
             } else {
                 debugResponses("  Location header: %s", location);
             }
-            return new NavState(location, parameters, state.root, state.config, cache.getOr(location));
+            const locurl = state.rebase(location);
+            return new NavState(locurl, parameters, state.config, cache.getOr(locurl));
         });
     }
 }

@@ -9,6 +9,18 @@ const debugSteps = debug("siren-nav:steps");
 
 export type Step = (cur: NavState, cache: Cache) => Promise<NavState>;
 
+/**
+ * This function takes a promise to a NavState along with a set of steps and
+ * reduces them down to a promise to a final NavState.  Because this is a
+ * chaining API, the interactions with the API are described by these steps.
+ * But at the end of the day, these steps need to be evaluated to get to the
+ * final NavState needed to processed (*i.e.,* make an actual request and
+ * process the resulting data).
+ *
+ * @param cur
+ * @param steps
+ * @param cache
+ */
 export async function reduce(cur: Promise<NavState>, steps: Step[], cache: Cache): Promise<NavState> {
     if (steps.length == 0) return cur;
     let state = await cur;
@@ -32,7 +44,7 @@ export function accept(ctype: string): Step {
             newconfig.headers = { ...state.config.headers, Accept: ctype };
         }
         debugSteps("  Updated value of Accept: %s", newconfig.headers["Accept"]);
-        return new NavState(state.cur, undefined, state.root, newconfig, cache.getOr(state.cur));
+        return new NavState(state.cur, undefined, newconfig, cache.getOr(state.cur));
     };
 }
 
@@ -46,7 +58,7 @@ export function auth(scheme: string, token: string): Step {
         // NB - We must create a new header object!
         newconfig.headers = { ...state.config.headers, Authorization: scheme + " " + token };
         debugSteps("  Updated value of Authorization: %s", newconfig.headers["Authorization"]);
-        return new NavState(state.cur, undefined, state.root, newconfig, cache.getOr(state.cur));
+        return new NavState(state.cur, undefined, newconfig, cache.getOr(state.cur));
     };
 }
 
@@ -60,12 +72,14 @@ export function follow(rel: string, parameters: {} | undefined, which?: (states:
                 if (entity.hasOwnProperty("href")) {
                     let href = entity["href"];
                     debugSteps("  Found possible match in subentity link, href = %s", href);
-                    possible.push(new NavState(href, parameters, state.root, state.config, cache.getOr(href)));
+                    const hrefAbs = state.rebase(href);
+                    possible.push(new NavState(hrefAbs, parameters, state.config, cache.getOr(hrefAbs)));
                 } else {
                     let self = getSelf(entity);
                     if (self) {
                         debugSteps("  Found possible match in subentity resource, self = %s", self);
-                        possible.push(new NavState(self, parameters, state.root, state.config, cache.getOr(self)));
+                        const selfAbs = state.rebase(self);
+                        possible.push(new NavState(selfAbs, parameters, state.config, cache.getOr(selfAbs)));
                     }
                 }
             });
@@ -73,7 +87,8 @@ export function follow(rel: string, parameters: {} | undefined, which?: (states:
             links.forEach((link: Link) => {
                 if (link.rel.indexOf(rel) == -1) return;
                 debugSteps("  Found possible match among links: %j", link);
-                possible.push(new NavState(link.href, parameters, state.root, state.config, cache.getOr(link.href)));
+                const hrefAbs = state.rebase(link.href);
+                possible.push(new NavState(hrefAbs, parameters, state.config, cache.getOr(hrefAbs)));
             });
             if (possible.length == 0) {
                 console.error("Cannot follow relation '" + rel + "', no links with that relation");
