@@ -6,7 +6,7 @@ import { NavResponse } from "./response";
 import { performAction, getRequest } from "./requests";
 import { sirenContentType } from "siren-types";
 
-import { joinPaths } from "urijs";
+import * as URI from "urijs";
 
 /**
  * The SirenNav class provides a collection of methods that allow for
@@ -27,9 +27,19 @@ export class SirenNav {
      *
      * @memberOf SirenNav
      */
-    static create(url: string, base: string, cache?: Cache, config?: Config) {
+    static create(url: string, base?: string, cache?: Cache, config?: Config) {
         if (!cache) cache = new Cache();
         config = config || {};
+        const uri = URI(url);
+        if (!base) {
+            if (uri.is("absolute")) {
+                const baseUri = uri.clone();
+                baseUri.path("/");
+                base = baseUri.toString();
+            } else {
+                throw new Error("When no base is provided, the URL (" + url + ") must be absolute");
+            }
+        }
         return new SirenNav(
             Promise.resolve(
                 new NavState(
@@ -216,7 +226,7 @@ export class SirenNav {
     getURL(): Promise<string> {
         return reduce(this.start, [...this.steps, ...this.omni], this.cache).then(state => {
             if (state.config.baseURL) {
-                return joinPaths(state.cur)
+                return URI(state.cur)
                     .absoluteTo(state.config.baseURL)
                     .toString();
             }
