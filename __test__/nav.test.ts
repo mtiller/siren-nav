@@ -33,6 +33,7 @@ describe("Navigation Tests", () => {
     it("should follow a template relation", async () => {
         const cache = new Cache();
         cache.add("http://localhost/foo", {
+            properties: undefined,
             links: [{ rel: ["search"], href: "/model/{model}" }],
         });
         const nav = SirenNav.create("http://localhost/foo", cache);

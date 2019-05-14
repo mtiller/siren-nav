@@ -2,7 +2,7 @@ import { NavState } from "./state";
 import { getSelf } from "./utils";
 import { getSiren } from "./utils";
 import { Cache } from "./cache";
-import { Link } from "siren-types";
+import { Link, isEmbeddedLink } from "siren-types";
 
 import * as debug from "debug";
 const debugSteps = debug("siren-nav:steps");
@@ -75,11 +75,13 @@ export function follow(rel: string, parameters: {} | undefined, which?: (states:
                     const hrefAbs = state.rebase(href);
                     possible.push(new NavState(hrefAbs, parameters, state.config, cache.getOr(hrefAbs)));
                 } else {
-                    let self = getSelf(entity);
-                    if (self) {
-                        debugSteps("  Found possible match in subentity resource, self = %s", self);
-                        const selfAbs = state.rebase(self);
-                        possible.push(new NavState(selfAbs, parameters, state.config, cache.getOr(selfAbs)));
+                    if (!isEmbeddedLink(entity)) {
+                        let self = getSelf(entity);
+                        if (self) {
+                            debugSteps("  Found possible match in subentity resource, self = %s", self);
+                            const selfAbs = state.rebase(self);
+                            possible.push(new NavState(selfAbs, parameters, state.config, cache.getOr(selfAbs)));
+                        }
                     }
                 }
             });

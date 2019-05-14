@@ -1,11 +1,11 @@
-import { Siren } from "siren-types";
+import { Siren, Link } from "siren-types";
 import { NavState } from "./state";
 import axios from "axios";
 
 import * as debug from "debug";
 const debugUtils = debug("siren-nav:utils");
 
-export function getSelf(v: Siren): string | null {
+export function getSelf(v: { links?: Link[] }): string | null {
     if (!v.links) return null;
     if (!Array.isArray(v.links)) return null;
     for (let i = 0; i < v.links.length; i++) {

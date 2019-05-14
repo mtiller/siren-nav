@@ -5,6 +5,7 @@ import { Entity } from "siren-types";
 import { NavResponse } from "./response";
 import { performAction, getRequest } from "./requests";
 import { sirenContentType } from "siren-types";
+import { Observable } from "rxjs";
 
 import * as URI from "urijs";
 
@@ -238,5 +239,27 @@ export class SirenNav {
         let state = reduce(this.start, [...this.steps, ...this.omni], this.cache);
         let resp = state.then(s => getRequest(s));
         return NavResponse.create(resp, this);
+    }
+
+    // TODO: Test this
+    subscribe<T>(rel?: string, poll?: number): Observable<Entity<T>> {
+        return new Observable(observer => {
+            observer.complete();
+            (async () => {
+                // Follow rel
+                // Get URL
+                const url = await this.follow(rel || "events").getURL();
+                if (url.startsWith("ws:" || url.startsWith("wss:"))) {
+                    throw new Error("Unimplemented");
+                    // Handle web socket case
+                } else {
+                    // Handle event source case
+                    const source = new EventSource(url);
+                    source.onmessage = msg => observer.next(msg as any);
+                    // TODO: Distinguish between close and error
+                    source.onerror = e => observer.error(e);
+                }
+            })();
+        });
     }
 }
