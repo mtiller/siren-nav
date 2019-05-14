@@ -20,7 +20,8 @@
         "noImplicitThis": true,
         "noImplicitReturns": true,
         "allowSyntheticDefaultImports": false,
-        "suppressImplicitAnyIndexErrors": true
+        "suppressImplicitAnyIndexErrors": true,
+        "sourceMap": true
     },
     "exclude": ["node_modules", "lib"]
 }

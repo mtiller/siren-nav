@@ -3,7 +3,8 @@ import { Siren } from "siren-types";
 import axios from "axios";
 import { AxiosResponse } from "axios";
 
-import * as URI from "urijs/src/URITemplate";
+import * as URI from "urijs";
+import * as URIT from "urijs/src/URITemplate";
 
 import * as debug from "debug";
 const debugRequests = debug("siren-nav:requests");
@@ -39,11 +40,15 @@ export function performAction<T>(name: string, body: T, parameters?: {}): Reques
                     debugRequests("    ERROR: no href");
                     throw new Error("No href for action " + name);
                 }
-                let url = action.href;
+                let url = URI(action.href)
+                    .absoluteTo(state.cur)
+                    .toString();
+                debugRequests("  Absolute URL: %s", url);
                 if (parameters) {
-                    url = URI(url)
+                    url = URIT(url)
                         .expand(parameters)
                         .toString();
+                    debugRequests("  After expansion with %j, URL became: ", parameters, url);
                 }
 
                 let data: T | undefined = body;
@@ -62,6 +67,7 @@ export function performAction<T>(name: string, body: T, parameters?: {}): Reques
                     }
                     if (args.length > 0) {
                         url = url + "?" + args.join("&");
+                        debugRequests("  After query string for form-urlencoding: %s", url);
                     }
                 }
                 debugRequests("    Making a %s request to %s with config %j", method.toUpperCase(), url, state.config);
