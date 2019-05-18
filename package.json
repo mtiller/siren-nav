@@ -32,7 +32,7 @@
         "axios": "^0.16.0",
         "debug": "^3.1.0",
         "rxjs": "^6.5.2",
-        "siren-types": "1.0.0-rc6",
+        "siren-types": "1.0.0-rc7",
         "urijs": "^1.19.1"
     }
 }

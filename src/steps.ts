@@ -2,12 +2,13 @@ import { NavState } from "./state";
 import { getSelf } from "./utils";
 import { getSiren } from "./utils";
 import { Cache } from "./cache";
-import { Link, isEmbeddedLink } from "siren-types";
+import { Link, isEmbeddedLink, Siren } from "siren-types";
 
 import * as debug from "debug";
 const debugSteps = debug("siren-nav:steps");
 
 export type Step = (cur: NavState, cache: Cache) => Promise<NavState>;
+export type MultiStep = (cur: NavState, cache: Cache) => Promise<NavState[]>;
 
 /**
  * This function takes a promise to a NavState along with a set of steps and
@@ -62,36 +63,56 @@ export function auth(scheme: string, token: string): Step {
     };
 }
 
+function findPossible(
+    rel: string,
+    siren: Siren,
+    state: NavState,
+    cache: Cache,
+    parameters: {} | undefined,
+): NavState[] {
+    debugSteps("Follow '%s':", rel);
+    let possible: NavState[] = [];
+    (siren.entities || []).forEach(entity => {
+        if (entity.rel.indexOf(rel) == -1) return;
+        if (entity.hasOwnProperty("href")) {
+            let href = entity["href"];
+            debugSteps("  Found possible match in subentity link, href = %s", href);
+            const hrefAbs = state.rebase(href);
+            possible.push(new NavState(hrefAbs, parameters, state.config, cache.getOr(hrefAbs)));
+        } else {
+            if (!isEmbeddedLink(entity)) {
+                let self = getSelf(entity);
+                if (self) {
+                    debugSteps("  Found possible match in subentity resource, self = %s", self);
+                    const selfAbs = state.rebase(self);
+                    possible.push(new NavState(selfAbs, parameters, state.config, cache.getOr(selfAbs)));
+                }
+            }
+        }
+    });
+    let links = siren.links || [];
+    links.forEach((link: Link) => {
+        if (link.rel.indexOf(rel) == -1) return;
+        debugSteps("  Found possible match among links: %j", link);
+        const hrefAbs = state.rebase(link.href);
+        possible.push(new NavState(hrefAbs, parameters, state.config, cache.getOr(hrefAbs)));
+    });
+    return possible;
+}
+
+// export function followMultiple(rel: string, parameters: {} | undefined): Step[] {
+//     return (state: NavState, cache: Cache): Promise<NavState[]> => {
+//         return getSiren(state).then(siren => {
+//             const possible = findPossible(rel, siren, state, cache, parameters);
+//             return possible;
+//         });
+//     };
+// }
+
 export function follow(rel: string, parameters: {} | undefined, which?: (states: NavState[]) => NavState): Step {
     return (state: NavState, cache: Cache): Promise<NavState> => {
         return getSiren(state).then(siren => {
-            debugSteps("Follow '%s':", rel);
-            let possible: NavState[] = [];
-            (siren.entities || []).forEach(entity => {
-                if (entity.rel.indexOf(rel) == -1) return;
-                if (entity.hasOwnProperty("href")) {
-                    let href = entity["href"];
-                    debugSteps("  Found possible match in subentity link, href = %s", href);
-                    const hrefAbs = state.rebase(href);
-                    possible.push(new NavState(hrefAbs, parameters, state.config, cache.getOr(hrefAbs)));
-                } else {
-                    if (!isEmbeddedLink(entity)) {
-                        let self = getSelf(entity);
-                        if (self) {
-                            debugSteps("  Found possible match in subentity resource, self = %s", self);
-                            const selfAbs = state.rebase(self);
-                            possible.push(new NavState(selfAbs, parameters, state.config, cache.getOr(selfAbs)));
-                        }
-                    }
-                }
-            });
-            let links = siren.links || [];
-            links.forEach((link: Link) => {
-                if (link.rel.indexOf(rel) == -1) return;
-                debugSteps("  Found possible match among links: %j", link);
-                const hrefAbs = state.rebase(link.href);
-                possible.push(new NavState(hrefAbs, parameters, state.config, cache.getOr(hrefAbs)));
-            });
+            const possible = findPossible(rel, siren, state, cache, parameters);
             if (possible.length == 0) {
                 console.error("Cannot follow relation '" + rel + "', no links with that relation");
                 throw new Error("Cannot follow relation '" + rel + "', no links with that relation");
@@ -100,13 +121,13 @@ export function follow(rel: string, parameters: {} | undefined, which?: (states:
                 if (!which) {
                     console.error(
                         "Multiple links with relation '" + rel + "' found when only one was expected in ",
-                        links,
+                        possible,
                     );
                     throw new Error(
                         "Multiple links with relation '" +
                             rel +
                             "' found when only one was expected in " +
-                            JSON.stringify(links, null, 4),
+                            JSON.stringify(possible, null, 4),
                     );
                 } else {
                     return which(possible);

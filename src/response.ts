@@ -1,6 +1,6 @@
 import { ResponseData } from "./requests";
 import { SirenNav } from "./navigation";
-import { Entity } from "siren-types";
+import { Entity, normalize, NormalizedEntity, Properties } from "siren-types";
 import { NavState } from "./state";
 import { Cache } from "./cache";
 
@@ -19,10 +19,17 @@ export class NavResponse {
 
     private constructor(private resp: Promise<ResponseData>, private nav: SirenNav) {}
 
-    async asSiren<T extends {}>(): Promise<Entity<T>> {
+    async asSiren<T extends Properties>(): Promise<Entity<T>> {
         let resp = await this.resp;
         debugResponses("Response as Siren: %j", resp.data);
         return resp.data as Entity<T>;
+    }
+
+    async asNormalizedSiren<T extends Properties>(defaultProps?: T): Promise<NormalizedEntity<T>> {
+        let resp = await this.resp;
+        debugResponses("Response as Siren: %j", resp.data);
+        const entity = resp.data as Entity<T>;
+        return normalize<T>(entity, defaultProps);
     }
 
     async asJson<T extends {}>(): Promise<T> {

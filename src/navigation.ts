@@ -78,10 +78,13 @@ export class SirenNav {
     ) {}
 
     /**
-     * Follow a given relation.  The optional second argument is used to indicate
-     * that the first match should be used in cases where multiple matches are
-     * available.  If the second argument is undefined or false, then anything but
-     * a single (exact) match will result in an error.
+     * Follow **one** instance of a given relation.  The optional second
+     * argument is used to indicate that the first match should be used in cases
+     * where multiple matches are available.  If the second argument is
+     * undefined or false, then anything but a single (exact) match will result
+     * in an error.
+     *
+     * If you wish to follow all links of a given relation, use followMultiple.
      *
      * @param {string} rel
      * @param {boolean} [first]
@@ -92,6 +95,11 @@ export class SirenNav {
     follow(rel: string, parameters?: {}, which?: (states: NavState[]) => NavState): SirenNav {
         return this.do(follow(rel, parameters, which));
     }
+
+    // followMultiple(rel: string, parameters?: {}): SirenNav[] {
+    //     const all = followMultiple(rel, parameters);
+    //     return all.map(step => this.do(step));
+    // }
 
     /**
      * Perform an action that expects a "hypermedia" payload as the input
