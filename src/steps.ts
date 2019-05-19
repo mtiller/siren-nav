@@ -1,8 +1,7 @@
 import { NavState } from "./state";
-import { getSelf } from "./utils";
 import { getSiren } from "./utils";
 import { Cache } from "./cache";
-import { Link, isEmbeddedLink, Siren } from "siren-types";
+import { Link, isEmbeddedLink, Siren, collectSelves } from "siren-types";
 
 import * as debug from "debug";
 import { getRequest } from "./requests";
@@ -124,11 +123,13 @@ export function findPossible(
             possible.push(new NavState(hrefAbs, parameters, state.config, cache.getOr(hrefAbs)));
         } else {
             if (!isEmbeddedLink(entity)) {
-                let self = getSelf(entity);
-                if (self) {
+                const selves = collectSelves(entity);
+                if (selves.length == 1) {
                     debugSteps("  Found possible match in subentity resource, self = %s", self);
-                    const selfAbs = state.rebase(self);
+                    const selfAbs = state.rebase(selves[0]);
                     possible.push(new NavState(selfAbs, parameters, state.config, cache.getOr(selfAbs)));
+                } else {
+                    console.warn("Multiple values found for 'self': " + JSON.stringify(selves) + ", ignoring");
                 }
             }
         }

@@ -1,4 +1,4 @@
-import { SirenNav, Cache } from "../src";
+import { SirenNav, Cache, NavState } from "../src";
 
 describe("URL Testing", () => {
     it("should create a SirenNav instance", async () => {
@@ -39,5 +39,10 @@ describe("Navigation Tests", () => {
         const nav = SirenNav.create("http://localhost/foo", cache);
         const url = await nav.follow("search", { model: "X1" }).getURL();
         expect(url).toEqual("http://localhost/model/X1");
+    });
+
+    it("should reject relative URLs", () => {
+        expect(() => SirenNav.create("/")).toThrow();
+        expect(() => new NavState("/", {}, {}, null)).toThrow();
     });
 });

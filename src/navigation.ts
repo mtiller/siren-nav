@@ -34,31 +34,33 @@ export class SirenNav {
         if (!cache) cache = new Cache();
         config = config || {};
         const uri = URI(url);
+
         if (uri.is("relative")) {
             throw new Error("SirenNav must be created with an absolute URL");
-        }
-        return new SirenNav(
-            Promise.resolve(
-                new NavState(
-                    url,
-                    undefined,
-                    {
-                        headers: {
-                            Accept: sirenContentType, // Assume siren unless the user overrides it
+        } else {
+            return new SirenNav(
+                Promise.resolve(
+                    new NavState(
+                        url,
+                        undefined,
+                        {
+                            headers: {
+                                Accept: sirenContentType, // Assume siren unless the user overrides it
+                            },
+                            // Commented out because it causes problems with HTTPS
+                            // APIs that don't require authentication (for reasons
+                            // I'm not 100% sure about).
+                            // withCredentials: true,
+                            ...config,
                         },
-                        // Commented out because it causes problems with HTTPS
-                        // APIs that don't require authentication (for reasons
-                        // I'm not 100% sure about).
-                        // withCredentials: true,
-                        ...config,
-                    },
-                    cache.getOr(url),
+                        cache.getOr(url),
+                    ),
                 ),
-            ),
-            [],
-            [],
-            cache,
-        );
+                [],
+                [],
+                cache,
+            );
+        }
     }
 
     /**
