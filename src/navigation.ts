@@ -1,8 +1,20 @@
 import { NavState, Config } from "./state";
 import { Cache } from "./cache";
-import { follow, Step, reduce, accept, auth } from "./steps";
+import {
+    follow,
+    Step,
+    reduce,
+    accept,
+    auth,
+    reduceEach,
+    followLocation,
+    followEach,
+    MultiStep,
+    toMulti,
+    header,
+} from "./steps";
 import { Entity } from "siren-types";
-import { NavResponse } from "./response";
+import { NavResponse, MultiResponse } from "./response";
 import { performAction, getRequest } from "./requests";
 import { sirenContentType } from "siren-types";
 import { Observable } from "rxjs";
@@ -84,7 +96,7 @@ export class SirenNav {
      * undefined or false, then anything but a single (exact) match will result
      * in an error.
      *
-     * If you wish to follow all links of a given relation, use followMultiple.
+     * If you wish to follow all links of a given relation, use followEach.
      *
      * @param {string} rel
      * @param {boolean} [first]
@@ -96,10 +108,20 @@ export class SirenNav {
         return this.do(follow(rel, parameters, which));
     }
 
-    // followMultiple(rel: string, parameters?: {}): SirenNav[] {
-    //     const all = followMultiple(rel, parameters);
-    //     return all.map(step => this.do(step));
-    // }
+    /**
+     * Follow the location header in the response when fetching the current resource.
+     *
+     * @returns {SirenNav}
+     * @memberof SirenNav
+     */
+    followLocation(): SirenNav {
+        return this.do(followLocation);
+    }
+
+    followEach(rel: string, parameters?: {}): MultiNav {
+        const multi = this.asMultiNav();
+        return multi.doMulti(followEach(rel, parameters));
+    }
 
     /**
      * Perform an action that expects a "hypermedia" payload as the input
@@ -129,7 +151,7 @@ export class SirenNav {
     performAction<P>(name: string, body: P): NavResponse {
         let state = reduce(this.start, [...this.steps, ...this.omni], this.cache);
         let resp = state.then(s => performAction(name, body)(s));
-        return NavResponse.create(resp, this);
+        return NavResponse.create(resp);
     }
 
     /**
@@ -217,6 +239,18 @@ export class SirenNav {
     }
 
     /**
+     * Add a given header
+     *
+     * @param {string} key The name of the header
+     * @param {string} value The value to give to the header
+     * @returns {SirenNav}
+     * @memberof SirenNav
+     */
+    header(key: string, value: string): SirenNav {
+        return this.do(header(key, value));
+    }
+
+    /**
      * This method returns the URL of the resource that is being pointed
      * to at the end of the chain of navigation steps.
      *
@@ -246,7 +280,7 @@ export class SirenNav {
     get(): NavResponse {
         let state = reduce(this.start, [...this.steps, ...this.omni], this.cache);
         let resp = state.then(s => getRequest(s));
-        return NavResponse.create(resp, this);
+        return NavResponse.create(resp);
     }
 
     // TODO: Test this
@@ -269,5 +303,55 @@ export class SirenNav {
                 }
             })();
         });
+    }
+
+    /**
+     * Transforms the current SirenNav into a MultiNav (one capable of tracking
+     * multiple concurrent resources)
+     *
+     * @protected
+     * @returns {MultiNav}
+     * @memberof SirenNav
+     */
+    protected asMultiNav(): MultiNav {
+        const starts: Promise<NavState[]> = this.start.then(v => [v]);
+        return new MultiNav(starts, this.steps.map(toMulti), this.omni, this.cache);
+    }
+}
+
+/**
+ * The MultiNav class is not one a user would generally instantiate themselves.
+ * Instead, it is created in response to certain steps in a chain that cause the
+ * set of resources to "fan out".  The main example of this is when you follow a
+ * relation and there are multiple instances of that relation.
+ *
+ * @export
+ * @class MultiNav
+ */
+export class MultiNav {
+    constructor(
+        private start: Promise<NavState[]>,
+        private steps: MultiStep[],
+        private omni: Step[],
+        private cache: Cache,
+    ) {}
+    get(): MultiResponse {
+        let state = reduceEach(this.start, [...this.steps, ...this.omni.map(toMulti)], this.cache);
+        let resp = state.then(s => Promise.all(s.map(x => getRequest(x))));
+        return MultiResponse.create(resp);
+    }
+    do(step: Step): MultiNav {
+        return new MultiNav(this.start, [...this.steps, toMulti(step)], this.omni, this.cache);
+    }
+    doMulti(steps: MultiStep): MultiNav {
+        return new MultiNav(this.start, [...this.steps, steps], this.omni, this.cache);
+    }
+
+    follow(rel: string, parameters?: {}, which?: (states: NavState[]) => NavState): MultiNav {
+        return this.do(follow(rel, parameters, which));
+    }
+
+    followEach(rel: string, parameters?: {}): MultiNav {
+        return this.doMulti(followEach(rel, parameters));
     }
 }
