@@ -6,10 +6,10 @@ import { Link, isEmbeddedLink, Siren } from "siren-types";
 
 import * as debug from "debug";
 import { getRequest } from "./requests";
+import { MultiStep } from "./multistep";
 const debugSteps = debug("siren-nav:steps");
 
 export type Step = (cur: NavState, cache: Cache) => Promise<NavState>;
-export type MultiStep = (cur: NavState, cache: Cache) => Promise<NavState[]>;
 
 /**
  * This function takes a promise to a NavState along with a set of steps and
@@ -106,7 +106,7 @@ export function auth(scheme: string, token: string): Step {
     return header("Authorization", `${scheme} ${token}`);
 }
 
-function findPossible(
+export function findPossible(
     rel: string,
     siren: Siren,
     state: NavState,
@@ -141,15 +141,6 @@ function findPossible(
         possible.push(new NavState(hrefAbs, parameters, state.config, cache.getOr(hrefAbs)));
     });
     return possible;
-}
-
-export function followEach(rel: string, parameters: {} | undefined): MultiStep {
-    return (state: NavState, cache: Cache): Promise<NavState[]> => {
-        return getSiren(state).then(siren => {
-            const possible = findPossible(rel, siren, state, cache, parameters);
-            return possible;
-        });
-    };
 }
 
 export const followLocation: Step = async (state: NavState, cache: Cache) => {
@@ -195,12 +186,5 @@ export function follow(rel: string, parameters: {} | undefined, which?: (states:
             debugSteps("  Found match, resulting state: %j", possible[0]);
             return possible[0];
         });
-    };
-}
-
-export function toMulti(step: Step): MultiStep {
-    return async (cur: NavState, cache: Cache) => {
-        const ns: NavState = await step(cur, cache);
-        return [ns];
     };
 }
