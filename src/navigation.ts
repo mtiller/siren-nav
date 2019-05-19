@@ -6,10 +6,10 @@ import { NavResponse } from "./response";
 import { performAction, getRequest } from "./requests";
 import { sirenContentType } from "siren-types";
 import { Observable } from "rxjs";
-import { MultiNav } from "./multinav";
+import { MultiNav } from "./multi/multinav";
 
 import * as URI from "urijs";
-import { followEach, toMulti } from "./multistep";
+import { followEach, toMulti } from "./multi/multistep";
 
 /**
  * The SirenNav class provides a collection of methods that allow for

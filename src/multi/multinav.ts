@@ -1,9 +1,9 @@
-import { NavState } from "./state";
+import { NavState } from "../state";
 import { MultiStep, toMulti, followEach } from "./multistep";
-import { Step, reduceEach, follow } from "./steps";
-import { MultiResponse } from "./response";
-import { getRequest } from "./requests";
-import { Cache } from "./cache";
+import { Step, reduceEach, follow } from "../steps";
+import { MultiResponse } from "./multiresp";
+import { getRequest } from "../requests";
+import { Cache } from "../cache";
 
 /**
  * The MultiNav class is not one a user would generally instantiate themselves.

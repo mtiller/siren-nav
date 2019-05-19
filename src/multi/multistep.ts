@@ -1,7 +1,7 @@
-import { NavState } from "./state";
-import { getSiren } from "./utils";
-import { findPossible, Step } from "./steps";
-import { Cache } from "./cache";
+import { NavState } from "../state";
+import { getSiren } from "../utils";
+import { findPossible, Step } from "../steps";
+import { Cache } from "../cache";
 
 export type MultiStep = (cur: NavState, cache: Cache) => Promise<NavState[]>;
 

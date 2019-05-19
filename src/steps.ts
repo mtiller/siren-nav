@@ -6,7 +6,7 @@ import { Link, isEmbeddedLink, Siren } from "siren-types";
 
 import * as debug from "debug";
 import { getRequest } from "./requests";
-import { MultiStep } from "./multistep";
+import { MultiStep } from "./multi/multistep";
 const debugSteps = debug("siren-nav:steps");
 
 export type Step = (cur: NavState, cache: Cache) => Promise<NavState>;
