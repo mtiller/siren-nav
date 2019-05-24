@@ -1,4 +1,6 @@
-import { SirenNav, Cache, NavState } from "../src";
+import { SirenNav, NavState } from "../src";
+import axios from "axios";
+import MockAdapter from "axios-mock-adapter";
 
 describe("URL Testing", () => {
     it("should create a SirenNav instance", async () => {
@@ -31,12 +33,12 @@ describe("URL Testing", () => {
 
 describe("Navigation Tests", () => {
     it("should follow a template relation", async () => {
-        const cache = new Cache();
-        cache.add("http://localhost/foo", {
+        const mock = new MockAdapter(axios);
+        mock.onGet("http://localhost/foo").reply(200, {
             properties: undefined,
             links: [{ rel: ["search"], href: "/model/{model}" }],
         });
-        const nav = SirenNav.create("http://localhost/foo", cache);
+        const nav = SirenNav.create("http://localhost/foo");
         const url = await nav.follow("search", { model: "X1" }).getURL();
         expect(url).toEqual("http://localhost/model/X1");
     });
