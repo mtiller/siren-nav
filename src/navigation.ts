@@ -8,8 +8,8 @@ import { sirenContentType } from "siren-types";
 import { Observable } from "rxjs";
 import { MultiNav } from "./multi/multinav";
 
-import * as URI from "urijs";
 import { followEach, toMulti } from "./multi/multistep";
+import { normalizeUrl } from "./utils";
 
 /**
  * The SirenNav class provides a collection of methods that allow for
@@ -32,28 +32,25 @@ export class SirenNav {
      */
     static create(url: string, config?: Config) {
         config = config || {};
-        const uri = URI(url);
 
-        if (uri.is("relative")) {
-            throw new Error("SirenNav must be created with an absolute URL");
-        } else {
-            return new SirenNav(
-                Promise.resolve(
-                    new NavState(url, undefined, {
-                        headers: {
-                            Accept: sirenContentType, // Assume siren unless the user overrides it
-                        },
-                        // Commented out because it causes problems with HTTPS
-                        // APIs that don't require authentication (for reasons
-                        // I'm not 100% sure about).
-                        // withCredentials: true,
-                        ...config,
-                    }),
-                ),
-                [],
-                [],
-            );
-        }
+        const uri = normalizeUrl(url, null);
+
+        return new SirenNav(
+            Promise.resolve(
+                new NavState(uri, undefined, {
+                    headers: {
+                        Accept: sirenContentType, // Assume siren unless the user overrides it
+                    },
+                    // Commented out because it causes problems with HTTPS
+                    // APIs that don't require authentication (for reasons
+                    // I'm not 100% sure about).
+                    // withCredentials: true,
+                    ...config,
+                }),
+            ),
+            [],
+            [],
+        );
     }
 
     /**
@@ -238,14 +235,9 @@ export class SirenNav {
      *
      * @memberOf SirenNav
      */
-    getURL(): Promise<string> {
+    getURL(parameters?: {}): Promise<string> {
         return reduce(this.start, [...this.steps, ...this.omni]).then(state => {
-            if (state.config.baseURL) {
-                return URI(state.cur)
-                    .absoluteTo(state.config.baseURL)
-                    .toString();
-            }
-            return state.cur;
+            return normalizeUrl(state.cur, state.config.baseURL || null, parameters);
         });
     }
 

@@ -5,6 +5,7 @@ import axios from "axios";
 import * as debug from "debug";
 const debugUtils = debug("siren-nav:utils");
 
+import * as URI from "urijs";
 import * as URIT from "urijs/src/URITemplate";
 
 export function getSiren(state: NavState): Promise<Siren> {
@@ -12,18 +13,16 @@ export function getSiren(state: NavState): Promise<Siren> {
     return Promise.resolve(axios.get(state.cur, state.config)).then(resp => resp.data as Siren);
 }
 
-export function normalizeUrl(href: string, base: string, parameters?: {}): string {
-    let url = URI(href)
-        .absoluteTo(base)
-        .toString();
+export function normalizeUrl(href: string, base: string | null, parameters?: {}): string {
+    const uri = URI(href);
+    let url = base ? uri.absoluteTo(base) : uri;
+    if (url.is("relative")) throw new Error("Normalized URL is relative: " + url.toString());
     if (parameters) {
-        url = URIT(url)
-            .expand(parameters)
-            .toString();
-        debugUtils("  After expansion with %j, URL became: ", parameters, url);
+        url = URIT(url.toString()).expand(parameters);
+        debugUtils("  After expansion with %j, URL became: %s", parameters, url.toString());
     }
-    debugUtils("  Absolute URL: %s", url);
-    return url;
+    debugUtils("  Absolute URL: %s", url.toString());
+    return url.toString();
 }
 
 export function formulateData(action: Action, body: {}): {} | string {
