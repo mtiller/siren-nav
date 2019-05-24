@@ -35,7 +35,6 @@ export function usingMockAPI(tests: (mock: MockAdapter) => Promise<void>) {
             properties: undefined,
             links: [{ rel: ["item"], href: "/model/1" }, { rel: ["item"], href: "/model/2" }],
         });
-
         mock.onGet("http://localhost/model/1").reply(200, {
             properties: { id: 1 },
             links: [{ rel: ["collection"], href: "/collection" }],
@@ -43,6 +42,12 @@ export function usingMockAPI(tests: (mock: MockAdapter) => Promise<void>) {
         mock.onGet("http://localhost/model/2").reply(200, {
             properties: { id: 2 },
             links: [{ rel: ["collection"], href: "/collection" }],
+        });
+
+        //// A self referential resource
+        mock.onGet("http://localhost/self-ref").reply(200, {
+            properties: undefined,
+            links: [{ rel: ["self"], href: "http://localhost/self-ref" }],
         });
 
         try {
