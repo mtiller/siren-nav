@@ -1,4 +1,3 @@
-import { Siren } from "siren-types";
 import { Config } from "./config";
 
 import * as URI from "urijs";
@@ -6,7 +5,7 @@ import * as URIT from "urijs/src/URITemplate";
 
 export class NavState {
     public readonly cur: string;
-    constructor(href: string, parameters: {} | undefined, public config: Config, public value: Siren | null) {
+    constructor(href: string, parameters: {} | undefined, public config: Config) {
         const uri = URI(href);
         if (uri.is("relative")) {
             throw new Error("Navigation state specify an absolute URL");

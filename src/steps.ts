@@ -77,13 +77,13 @@ export function accept(ctype: string): Step {
             newconfig.headers = { ...state.config.headers, Accept: ctype };
         }
         debugSteps("  Updated value of Accept: %s", newconfig.headers["Accept"]);
-        return new NavState(state.cur, undefined, newconfig, null);
+        return new NavState(state.cur, undefined, newconfig);
     };
 }
 
 export function header(key: string, value: string): Step {
     return async (state: NavState): Promise<NavState> => {
-        return new NavState(state.cur, undefined, headerConfig(key, value)(state.config), null);
+        return new NavState(state.cur, undefined, headerConfig(key, value)(state.config));
     };
 }
 
@@ -104,14 +104,14 @@ export function findPossible(rel: string, siren: Siren, state: NavState, paramet
             let href = entity["href"];
             debugSteps("  Found possible match in subentity link, href = %s", href);
             const hrefAbs = state.rebase(href);
-            possible.push(new NavState(hrefAbs, parameters, state.config, null));
+            possible.push(new NavState(hrefAbs, parameters, state.config));
         } else {
             if (!isEmbeddedLink(entity)) {
                 const selves = collectSelves(entity);
                 if (selves.length == 1) {
                     debugSteps("  Found possible match in subentity resource, self = %s", self);
                     const selfAbs = state.rebase(selves[0]);
-                    possible.push(new NavState(selfAbs, parameters, state.config, null));
+                    possible.push(new NavState(selfAbs, parameters, state.config));
                 } else {
                     console.warn("Multiple values found for 'self': " + JSON.stringify(selves) + ", ignoring");
                 }
@@ -123,7 +123,7 @@ export function findPossible(rel: string, siren: Siren, state: NavState, paramet
         if (link.rel.indexOf(rel) == -1) return;
         debugSteps("  Found possible match among links: %j", link);
         const hrefAbs = state.rebase(link.href);
-        possible.push(new NavState(hrefAbs, parameters, state.config, null));
+        possible.push(new NavState(hrefAbs, parameters, state.config));
     });
     return possible;
 }
@@ -141,7 +141,7 @@ export const followLocation: Step = async (state: NavState) => {
         debugSteps("  Location header: %s", location);
     }
     const locurl = state.rebase(location);
-    return new NavState(locurl, undefined, state.config, null);
+    return new NavState(locurl, undefined, state.config);
 };
 
 export function follow(rel: string, parameters: {} | undefined, which?: (states: NavState[]) => NavState): Step {

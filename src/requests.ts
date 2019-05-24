@@ -72,10 +72,6 @@ export function performAction<T extends {}>(name: string, body: T, parameters?: 
 
 export const getRequest: Request = async (state: NavState): Promise<ResponseData> => {
     debugRequests("Requesting %s", state.cur);
-    if (state.value) {
-        debugRequests("  Using cached copy: %j", state.value);
-        return Promise.resolve<ResponseData>({ data: state.value, headers: {}, status: 200 });
-    }
     debugRequests("  Fetching latest resource at %s with config %j", state.cur, state.config);
     return axios.get(state.cur, state.config).then(v => {
         debugRequests("  ResponseData for %s: %j", state.cur, v);

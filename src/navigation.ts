@@ -39,21 +39,16 @@ export class SirenNav {
         } else {
             return new SirenNav(
                 Promise.resolve(
-                    new NavState(
-                        url,
-                        undefined,
-                        {
-                            headers: {
-                                Accept: sirenContentType, // Assume siren unless the user overrides it
-                            },
-                            // Commented out because it causes problems with HTTPS
-                            // APIs that don't require authentication (for reasons
-                            // I'm not 100% sure about).
-                            // withCredentials: true,
-                            ...config,
+                    new NavState(url, undefined, {
+                        headers: {
+                            Accept: sirenContentType, // Assume siren unless the user overrides it
                         },
-                        null,
-                    ),
+                        // Commented out because it causes problems with HTTPS
+                        // APIs that don't require authentication (for reasons
+                        // I'm not 100% sure about).
+                        // withCredentials: true,
+                        ...config,
+                    }),
                 ),
                 [],
                 [],
@@ -202,7 +197,7 @@ export class SirenNav {
     goto(url: string, parameters?: {}): SirenNav {
         let newstate = new Promise<NavState>(async (resolve, reject) => {
             let state = await this.start;
-            resolve(new NavState(state.rebase(url), parameters, state.config, null));
+            resolve(new NavState(state.rebase(url), parameters, state.config));
         });
         return new SirenNav(newstate, [], [...this.omni]);
     }

@@ -45,6 +45,6 @@ describe("Navigation Tests", () => {
 
     it("should reject relative URLs", () => {
         expect(() => SirenNav.create("/")).toThrow();
-        expect(() => new NavState("/", {}, {}, null)).toThrow();
+        expect(() => new NavState("/", {}, {})).toThrow();
     });
 });
