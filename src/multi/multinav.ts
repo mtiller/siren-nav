@@ -3,7 +3,6 @@ import { MultiStep, toMulti, followEach } from "./multistep";
 import { Step, reduceEach, follow } from "../steps";
 import { MultiResponse } from "./multiresp";
 import { getRequest } from "../requests";
-import { Cache } from "../cache";
 
 /**
  * The MultiNav class is not one a user would generally instantiate themselves.
@@ -15,22 +14,17 @@ import { Cache } from "../cache";
  * @class MultiNav
  */
 export class MultiNav {
-    constructor(
-        private start: Promise<NavState[]>,
-        private steps: MultiStep[],
-        private omni: Step[],
-        private cache: Cache,
-    ) {}
+    constructor(private start: Promise<NavState[]>, private steps: MultiStep[], private omni: Step[]) {}
     get(): MultiResponse {
-        let state = reduceEach(this.start, [...this.steps, ...this.omni.map(toMulti)], this.cache);
+        let state = reduceEach(this.start, [...this.steps, ...this.omni.map(toMulti)]);
         let resp = state.then(s => Promise.all(s.map(x => getRequest(x))));
         return MultiResponse.create(resp);
     }
     do(step: Step): MultiNav {
-        return new MultiNav(this.start, [...this.steps, toMulti(step)], this.omni, this.cache);
+        return new MultiNav(this.start, [...this.steps, toMulti(step)], this.omni);
     }
     doMulti(steps: MultiStep): MultiNav {
-        return new MultiNav(this.start, [...this.steps, steps], this.omni, this.cache);
+        return new MultiNav(this.start, [...this.steps, steps], this.omni);
     }
 
     follow(rel: string, parameters?: {}, which?: (states: NavState[]) => NavState): MultiNav {

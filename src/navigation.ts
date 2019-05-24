@@ -1,6 +1,5 @@
 import { NavState } from "./state";
 import { Config } from "./config";
-import { Cache } from "./cache";
 import { follow, Step, reduce, accept, auth, followLocation, header } from "./steps";
 import { Entity } from "siren-types";
 import { NavResponse } from "./response";
@@ -31,8 +30,7 @@ export class SirenNav {
      *
      * @memberOf SirenNav
      */
-    static create(url: string, cache?: Cache, config?: Config) {
-        if (!cache) cache = new Cache();
+    static create(url: string, config?: Config) {
         config = config || {};
         const uri = URI(url);
 
@@ -54,12 +52,11 @@ export class SirenNav {
                             // withCredentials: true,
                             ...config,
                         },
-                        cache.getOr(url),
+                        null,
                     ),
                 ),
                 [],
                 [],
-                cache,
             );
         }
     }
@@ -75,12 +72,7 @@ export class SirenNav {
      *
      * @memberOf SirenNav
      */
-    private constructor(
-        private start: Promise<NavState>,
-        private steps: Step[],
-        private omni: Step[],
-        private cache: Cache,
-    ) {}
+    private constructor(private start: Promise<NavState>, private steps: Step[], private omni: Step[]) {}
 
     /**
      * Follow **one** instance of a given relation.  The optional second
@@ -142,7 +134,7 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     performAction<P>(name: string, body: P): NavResponse {
-        let state = reduce(this.start, [...this.steps, ...this.omni], this.cache);
+        let state = reduce(this.start, [...this.steps, ...this.omni]);
         let resp = state.then(s => performAction(name, body)(s));
         return NavResponse.create(resp);
     }
@@ -159,7 +151,7 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     do(step: Step): SirenNav {
-        return new SirenNav(this.start, [...this.steps, step], [...this.omni], this.cache);
+        return new SirenNav(this.start, [...this.steps, step], [...this.omni]);
     }
 
     /**
@@ -168,7 +160,7 @@ export class SirenNav {
      * public to allow extensions.
      */
     doOmni(step: Step): SirenNav {
-        return new SirenNav(this.start, [...this.steps], [...this.omni, step], this.cache);
+        return new SirenNav(this.start, [...this.steps], [...this.omni, step]);
     }
 
     /**
@@ -193,7 +185,7 @@ export class SirenNav {
      */
     squash(): SirenNav {
         // NB - Note that we do NOT squash the omni steps.  Those remain.
-        return new SirenNav(reduce(this.start, this.steps, this.cache), [], [...this.omni], this.cache);
+        return new SirenNav(reduce(this.start, this.steps), [], [...this.omni]);
     }
 
     /**
@@ -210,9 +202,9 @@ export class SirenNav {
     goto(url: string, parameters?: {}): SirenNav {
         let newstate = new Promise<NavState>(async (resolve, reject) => {
             let state = await this.start;
-            resolve(new NavState(state.rebase(url), parameters, state.config, this.cache.getOr(url)));
+            resolve(new NavState(state.rebase(url), parameters, state.config, null));
         });
-        return new SirenNav(newstate, [], [...this.omni], this.cache);
+        return new SirenNav(newstate, [], [...this.omni]);
     }
 
     /**
@@ -252,7 +244,7 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     getURL(): Promise<string> {
-        return reduce(this.start, [...this.steps, ...this.omni], this.cache).then(state => {
+        return reduce(this.start, [...this.steps, ...this.omni]).then(state => {
             if (state.config.baseURL) {
                 return URI(state.cur)
                     .absoluteTo(state.config.baseURL)
@@ -271,7 +263,7 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     get(): NavResponse {
-        let state = reduce(this.start, [...this.steps, ...this.omni], this.cache);
+        let state = reduce(this.start, [...this.steps, ...this.omni]);
         let resp = state.then(s => getRequest(s));
         return NavResponse.create(resp);
     }
@@ -308,6 +300,6 @@ export class SirenNav {
      */
     protected asMultiNav(): MultiNav {
         const starts: Promise<NavState[]> = this.start.then(v => [v]);
-        return new MultiNav(starts, this.steps.map(toMulti), this.omni, this.cache);
+        return new MultiNav(starts, this.steps.map(toMulti), this.omni);
     }
 }

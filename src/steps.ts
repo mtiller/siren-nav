@@ -1,6 +1,5 @@
 import { NavState } from "./state";
 import { getSiren } from "./utils";
-import { Cache } from "./cache";
 import { getRequest } from "./requests";
 import { MultiStep } from "./multi/multistep";
 import { Link, isEmbeddedLink, Siren, collectSelves } from "siren-types";
@@ -9,7 +8,7 @@ import * as debug from "debug";
 import { headerConfig } from "./config";
 const debugSteps = debug("siren-nav:steps");
 
-export type Step = (cur: NavState, cache: Cache) => Promise<NavState>;
+export type Step = (cur: NavState) => Promise<NavState>;
 
 /**
  * This function takes a promise to a NavState along with a set of steps and
@@ -21,16 +20,15 @@ export type Step = (cur: NavState, cache: Cache) => Promise<NavState>;
  *
  * @param cur
  * @param steps
- * @param cache
  */
-export async function reduce(cur: Promise<NavState>, steps: Step[], cache: Cache): Promise<NavState> {
+export async function reduce(cur: Promise<NavState>, steps: Step[]): Promise<NavState> {
     if (steps.length == 0) return cur;
     const state = await cur;
-    return reduce(applyStep(steps[0], state, cache), steps.slice(1), cache);
+    return reduce(applyStep(steps[0], state), steps.slice(1));
 }
 
-function applyStep(step: Step, state: NavState, cache: Cache): Promise<NavState> {
-    return step(state, cache);
+function applyStep(step: Step, state: NavState): Promise<NavState> {
+    return step(state);
 }
 
 /**
@@ -46,25 +44,24 @@ function applyStep(step: Step, state: NavState, cache: Cache): Promise<NavState>
  * @param steps The steps to apply.  The first element in this array is the set
  * of steps to apply first.  The next element is the set of steps to apply
  * second. etc.
- * @param cache
  */
-export async function reduceEach(cur: Promise<NavState[]>, steps: MultiStep[], cache: Cache): Promise<NavState[]> {
+export async function reduceEach(cur: Promise<NavState[]>, steps: MultiStep[]): Promise<NavState[]> {
     if (steps.length == 0) return cur;
     const states = await cur;
-    return reduceEach(applySteps(steps[0], states, cache), steps.slice(1), cache);
+    return reduceEach(applySteps(steps[0], states), steps.slice(1));
 }
 
-async function applySteps(step: MultiStep, states: NavState[], cache: Cache): Promise<NavState[]> {
+async function applySteps(step: MultiStep, states: NavState[]): Promise<NavState[]> {
     let ret: NavState[] = [];
     for (let i = 0; i < states.length; i++) {
-        const results = await step(states[i], cache);
+        const results = await step(states[i]);
         ret = [...ret, ...results];
     }
     return ret;
 }
 
 export function accept(ctype: string): Step {
-    return async (state: NavState, cache: Cache): Promise<NavState> => {
+    return async (state: NavState): Promise<NavState> => {
         debugSteps("Fetching data accepting only '%s' as content type", ctype);
         debugSteps("  Resource: %s", state.cur);
         let newconfig = { ...state.config };
@@ -80,13 +77,13 @@ export function accept(ctype: string): Step {
             newconfig.headers = { ...state.config.headers, Accept: ctype };
         }
         debugSteps("  Updated value of Accept: %s", newconfig.headers["Accept"]);
-        return new NavState(state.cur, undefined, newconfig, cache.getOr(state.cur));
+        return new NavState(state.cur, undefined, newconfig, null);
     };
 }
 
 export function header(key: string, value: string): Step {
-    return async (state: NavState, cache: Cache): Promise<NavState> => {
-        return new NavState(state.cur, undefined, headerConfig(key, value)(state.config), cache.getOr(state.cur));
+    return async (state: NavState): Promise<NavState> => {
+        return new NavState(state.cur, undefined, headerConfig(key, value)(state.config), null);
     };
 }
 
@@ -98,13 +95,7 @@ export function auth(scheme: string, token: string): Step {
     return header("Authorization", `${scheme} ${token}`);
 }
 
-export function findPossible(
-    rel: string,
-    siren: Siren,
-    state: NavState,
-    cache: Cache,
-    parameters: {} | undefined,
-): NavState[] {
+export function findPossible(rel: string, siren: Siren, state: NavState, parameters: {} | undefined): NavState[] {
     debugSteps("Follow '%s':", rel);
     let possible: NavState[] = [];
     (siren.entities || []).forEach(entity => {
@@ -113,14 +104,14 @@ export function findPossible(
             let href = entity["href"];
             debugSteps("  Found possible match in subentity link, href = %s", href);
             const hrefAbs = state.rebase(href);
-            possible.push(new NavState(hrefAbs, parameters, state.config, cache.getOr(hrefAbs)));
+            possible.push(new NavState(hrefAbs, parameters, state.config, null));
         } else {
             if (!isEmbeddedLink(entity)) {
                 const selves = collectSelves(entity);
                 if (selves.length == 1) {
                     debugSteps("  Found possible match in subentity resource, self = %s", self);
                     const selfAbs = state.rebase(selves[0]);
-                    possible.push(new NavState(selfAbs, parameters, state.config, cache.getOr(selfAbs)));
+                    possible.push(new NavState(selfAbs, parameters, state.config, null));
                 } else {
                     console.warn("Multiple values found for 'self': " + JSON.stringify(selves) + ", ignoring");
                 }
@@ -132,12 +123,12 @@ export function findPossible(
         if (link.rel.indexOf(rel) == -1) return;
         debugSteps("  Found possible match among links: %j", link);
         const hrefAbs = state.rebase(link.href);
-        possible.push(new NavState(hrefAbs, parameters, state.config, cache.getOr(hrefAbs)));
+        possible.push(new NavState(hrefAbs, parameters, state.config, null));
     });
     return possible;
 }
 
-export const followLocation: Step = async (state: NavState, cache: Cache) => {
+export const followLocation: Step = async (state: NavState) => {
     debugSteps("Following Location header");
     const resp = await getRequest(state);
     debugSteps("Response for %s was: %j", state.cur, resp);
@@ -150,13 +141,13 @@ export const followLocation: Step = async (state: NavState, cache: Cache) => {
         debugSteps("  Location header: %s", location);
     }
     const locurl = state.rebase(location);
-    return new NavState(locurl, undefined, state.config, cache.getOr(locurl));
+    return new NavState(locurl, undefined, state.config, null);
 };
 
 export function follow(rel: string, parameters: {} | undefined, which?: (states: NavState[]) => NavState): Step {
-    return (state: NavState, cache: Cache): Promise<NavState> => {
+    return (state: NavState): Promise<NavState> => {
         return getSiren(state).then(siren => {
-            const possible = findPossible(rel, siren, state, cache, parameters);
+            const possible = findPossible(rel, siren, state, parameters);
             if (possible.length == 0) {
                 console.error("Cannot follow relation '" + rel + "', no links with that relation");
                 throw new Error("Cannot follow relation '" + rel + "', no links with that relation");
