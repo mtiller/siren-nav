@@ -1,5 +1,5 @@
 import { SirenNav, NavState } from "../src";
-import { setupMockAPI as usingMockAPI } from "./api";
+import { usingMockAPI } from "./api";
 
 describe("URL Testing", () => {
     it("should create a SirenNav instance", async () => {
