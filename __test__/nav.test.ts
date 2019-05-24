@@ -1,6 +1,5 @@
 import { SirenNav, NavState } from "../src";
-import axios from "axios";
-import MockAdapter from "axios-mock-adapter";
+import { setupMockAPI as usingMockAPI } from "./api";
 
 describe("URL Testing", () => {
     it("should create a SirenNav instance", async () => {
@@ -32,19 +31,33 @@ describe("URL Testing", () => {
 });
 
 describe("Navigation Tests", () => {
-    it("should follow a template relation", async () => {
-        const mock = new MockAdapter(axios);
-        mock.onGet("http://localhost/foo").reply(200, {
-            properties: undefined,
-            links: [{ rel: ["search"], href: "/model/{model}" }],
-        });
-        const nav = SirenNav.create("http://localhost/foo");
-        const url = await nav.follow("search", { model: "X1" }).getURL();
-        expect(url).toEqual("http://localhost/model/X1");
-    });
+    it(
+        "should follow a template relation",
+        usingMockAPI(async () => {
+            const nav = SirenNav.create("http://localhost/search-template");
+            const url = await nav.follow("search", { model: "X1" }).getURL();
+            expect(url).toEqual("http://localhost/model/X1");
+        }),
+    );
 
     it("should reject relative URLs", () => {
         expect(() => SirenNav.create("/")).toThrow();
         expect(() => new NavState("/", {}, {})).toThrow();
     });
+
+    it(
+        "should follow redirects",
+        usingMockAPI(async () => {
+            const nav = SirenNav.create("http://localhost/308");
+            const req = nav.get().asSiren<{ message: string }>();
+            expect(req).rejects.not.toBeFalsy();
+            const req2 = nav
+                .goto("/resource")
+                .followLocation()
+                .get()
+                .asSiren<{ message: string }>();
+            const resp = await req2;
+            expect(resp.properties.message).toEqual("I am bar");
+        }),
+    );
 });
