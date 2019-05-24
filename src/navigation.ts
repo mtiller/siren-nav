@@ -1,4 +1,5 @@
-import { NavState, Config } from "./state";
+import { NavState } from "./state";
+import { Config } from "./config";
 import { Cache } from "./cache";
 import { follow, Step, reduce, accept, auth, followLocation, header } from "./steps";
 import { Entity } from "siren-types";

@@ -1,10 +1,8 @@
 import { Siren } from "siren-types";
-import { AxiosRequestConfig } from "axios";
+import { Config } from "./config";
 
 import * as URI from "urijs";
 import * as URIT from "urijs/src/URITemplate";
-
-export type Config = AxiosRequestConfig;
 
 export class NavState {
     public readonly cur: string;

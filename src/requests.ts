@@ -3,10 +3,9 @@ import { Siren } from "siren-types";
 import axios from "axios";
 import { AxiosResponse } from "axios";
 
-import * as URI from "urijs";
-import * as URIT from "urijs/src/URITemplate";
-
 import * as debug from "debug";
+import { contentTypeConfig } from "./config";
+import { normalizeUrl, formulateData } from "./utils";
 const debugRequests = debug("siren-nav:requests");
 
 export interface ResponseData {
@@ -17,12 +16,15 @@ export interface ResponseData {
 
 export type Request = (cur: NavState) => Promise<ResponseData>;
 
-export function performAction<T>(name: string, body: T, parameters?: {}): Request {
+export function performAction<T extends {}>(name: string, body: T, parameters?: {}): Request {
     return async (state: NavState): Promise<AxiosResponse> => {
         debugRequests("Performing action %s on %s", name, state.cur);
         debugRequests("  Fetching latest version of %s with config %j", state.cur, state.config);
-        let resp = await axios.get(state.cur, state.config);
+        const resp = await getRequest(state);
         let siren: Siren = resp.data as Siren;
+        // We may need to tweak the config, so let's start with the config of
+        // the NavState
+        let request = state.config;
 
         debugRequests("  Latest value of %s: %j", siren, state.cur);
 
@@ -31,58 +33,40 @@ export function performAction<T>(name: string, body: T, parameters?: {}): Reques
             throw new Error("No actions defined for " + state.cur);
         }
 
-        for (let i = 0; i < siren.actions.length; i++) {
-            let action = siren.actions[i];
-            if (action.name == name) {
-                let method = action.method || "get";
-                debugRequests("  Found action with name %s", name);
-                if (!action.href) {
-                    debugRequests("    ERROR: no href");
-                    throw new Error("No href for action " + name);
-                }
-                let url = URI(action.href)
-                    .absoluteTo(state.cur)
-                    .toString();
-                debugRequests("  Absolute URL: %s", url);
-                if (parameters) {
-                    url = URIT(url)
-                        .expand(parameters)
-                        .toString();
-                    debugRequests("  After expansion with %j, URL became: ", parameters, url);
-                }
-
-                let data: T | undefined = body;
-
-                // If no action type was given or if they specifically asked for url encoding,
-                // add data as a url encoded query string.
-                // TODO: support some kind of flattening or other convention for marshalling objects
-                // in this way?
-                if (!action.type || action.type.toLowerCase() == "application/x-www-form-urlencoded") {
-                    let args: string[] = [];
-                    data = undefined;
-                    if (body && typeof body == "object") {
-                        args = Object.keys(body).map(
-                            key => encodeURIComponent(key) + "=" + encodeURIComponent(body[key]),
-                        );
-                    }
-                    if (args.length > 0) {
-                        url = url + "?" + args.join("&");
-                        debugRequests("  After query string for form-urlencoding: %s", url);
-                    }
-                }
-                debugRequests("    Making a %s request to %s with config %j", method.toUpperCase(), url, state.config);
-                return Promise.resolve(
-                    axios.request({
-                        ...state.config,
-                        baseURL: state.config.baseURL,
-                        method: method.toLowerCase(),
-                        url: url,
-                        data: data,
-                    }),
-                );
-            }
+        const action = siren.actions.find(action => action.name == name);
+        if (!action) {
+            throw new Error(
+                `No action named ${name} found among: ${JSON.stringify(siren.actions.map(action => action.name))}`,
+            );
         }
-        throw new Error("Unknown action '" + name + "', choices were " + siren.actions.map(a => a.name).join(", "));
+        debugRequests("  Found action with name %s", name);
+
+        // Make sure there is an href here...
+        if (!action.href) {
+            debugRequests("    ERROR: no href");
+            throw new Error("No href for action " + name);
+        }
+
+        // If the action specifies a content-type for the payload, include that
+        // in the request.
+        if (action.type) {
+            debugRequests("    Content-Type set to %s", action.type);
+            request = contentTypeConfig(action.type)(request);
+        }
+
+        // Specify the method associated with the action (or fallback to "get")
+        request = { ...request, method: action.method || "get" };
+
+        let url = normalizeUrl(action.href, state.cur, parameters);
+
+        let data: {} | string = formulateData(action, body);
+        debugRequests("  Data for request: %j", data);
+
+        // Add URL and data to request
+        request = { ...request, url: url, data: data };
+
+        debugRequests("    Making a request to %s with config %j", url, request);
+        return Promise.resolve(axios.request(request));
     };
 }
 

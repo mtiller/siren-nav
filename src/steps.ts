@@ -1,11 +1,12 @@
 import { NavState } from "./state";
 import { getSiren } from "./utils";
 import { Cache } from "./cache";
+import { getRequest } from "./requests";
+import { MultiStep } from "./multi/multistep";
 import { Link, isEmbeddedLink, Siren, collectSelves } from "siren-types";
 
 import * as debug from "debug";
-import { getRequest } from "./requests";
-import { MultiStep } from "./multi/multistep";
+import { headerConfig } from "./config";
 const debugSteps = debug("siren-nav:steps");
 
 export type Step = (cur: NavState, cache: Cache) => Promise<NavState>;
@@ -85,15 +86,7 @@ export function accept(ctype: string): Step {
 
 export function header(key: string, value: string): Step {
     return async (state: NavState, cache: Cache): Promise<NavState> => {
-        let newconfig = { ...state.config };
-        if (!newconfig.headers) newconfig.headers = {};
-
-        // NB - We must create a new header object!
-        newconfig.headers = { ...state.config.headers };
-        newconfig.headers[key] = value;
-
-        debugSteps("  Set header '%s' to '%s'", key, newconfig.headers[key]);
-        return new NavState(state.cur, undefined, newconfig, cache.getOr(state.cur));
+        return new NavState(state.cur, undefined, headerConfig(key, value)(state.config), cache.getOr(state.cur));
     };
 }
 
