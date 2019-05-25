@@ -9,11 +9,6 @@ export class NavResponse {
         return new NavResponse(resp);
     }
 
-    static fromValue(value: {}): NavResponse {
-        let resp = Promise.resolve<ResponseData>({ data: value, headers: {}, status: 200 });
-        return new NavResponse(resp);
-    }
-
     private constructor(private resp: Promise<ResponseData>) {}
 
     async asSiren<T extends Properties>(): Promise<Entity<T>> {

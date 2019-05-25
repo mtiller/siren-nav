@@ -31,6 +31,9 @@ export function usingMockAPI(tests: (mock: MockAdapter) => Promise<void>) {
                 },
             }),
         );
+        mock.onGet("http://localhost/array").reply(200, new ArrayBuffer(10));
+        mock.onGet("http://localhost/string").reply(200, "a string");
+        mock.onGet("http://localhost/string").reply(200, 5);
 
         //// Resources that involve templates
         mock.onGet("http://localhost/search-template").reply(
