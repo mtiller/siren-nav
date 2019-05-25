@@ -1,5 +1,5 @@
 import { Siren, isEmbeddedLink, collectSelves, Link } from "siren-types";
-import { Step } from "./step";
+import { StateTransition } from "./step";
 
 import * as debug from "debug";
 import { NavState } from "../state";
@@ -78,7 +78,7 @@ export function follow(
     baseConfig: Config,
     parameters: {} | undefined,
     which?: (states: NavState[]) => NavState,
-): Step {
+): StateTransition {
     return (state: NavState): Promise<NavState> => {
         return getSiren(state).then(siren => {
             const possible = findPossible(rel, siren, state, baseConfig, parameters);
@@ -108,7 +108,7 @@ export function follow(
     };
 }
 
-export function goto(url: string, baseConfig: Config, parameters?: {} | undefined): Step {
+export function goto(url: string, baseConfig: Config, parameters?: {} | undefined): StateTransition {
     return async (state: NavState): Promise<NavState> => {
         return new NavState(state.rebase(url), parameters, baseConfig);
     };

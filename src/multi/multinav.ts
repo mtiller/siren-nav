@@ -1,6 +1,6 @@
 import { NavState } from "../state";
-import { MultiStep, toMulti, followEach } from "./multistep";
-import { Step, reduceEach, follow } from "../steps";
+import { MultiStateTransition, toMulti, followEach } from "./multistep";
+import { StateTransition, reduceEach, follow, MultiStep, SingleStep } from "../steps";
 import { MultiResponse } from "./multiresp";
 import { getRequest } from "../requests";
 import { Config } from "../config";
@@ -15,29 +15,34 @@ import { Config } from "../config";
  * @class MultiNav
  */
 export class MultiNav {
-    constructor(
-        private start: Promise<NavState[]>,
-        private steps: MultiStep[],
-        private omni: Step[],
-        private baseConfig: Config,
-    ) {}
+    constructor(private start: Promise<NavState[]>, private steps: MultiStep[], private baseConfig: Config) {}
     get(): MultiResponse {
-        let state = reduceEach(this.start, [...this.steps, ...this.omni.map(toMulti)]);
+        let state = reduceEach(this.start, this.steps, []);
         let resp = state.then(s => Promise.all(s.map(x => getRequest(x))));
         return MultiResponse.create(resp);
     }
-    do(step: Step): MultiNav {
-        return new MultiNav(this.start, [...this.steps, toMulti(step)], this.omni, this.baseConfig);
+    do(description: string, transition: StateTransition): MultiNav {
+        const step: SingleStep = {
+            persistent: false,
+            description: description,
+            transition: transition,
+        };
+        return new MultiNav(this.start, [...this.steps, toMulti(step)], this.baseConfig);
     }
-    doMulti(steps: MultiStep): MultiNav {
-        return new MultiNav(this.start, [...this.steps, steps], this.omni, this.baseConfig);
+    doMulti(description: string, transition: MultiStateTransition): MultiNav {
+        const step: MultiStep = {
+            persistent: false,
+            description: description,
+            transition: transition,
+        };
+        return new MultiNav(this.start, [...this.steps, step], this.baseConfig);
     }
 
     follow(rel: string, parameters?: {}, which?: (states: NavState[]) => NavState): MultiNav {
-        return this.do(follow(rel, this.baseConfig, parameters, which));
+        return this.do(`Follow one relation of type ${rel}`, follow(rel, this.baseConfig, parameters, which));
     }
 
     followEach(rel: string, parameters?: {}): MultiNav {
-        return this.doMulti(followEach(rel, this.baseConfig, parameters));
+        return this.doMulti(`Follow all relations of type ${rel}`, followEach(rel, this.baseConfig, parameters));
     }
 }

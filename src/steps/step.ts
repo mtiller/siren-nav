@@ -17,4 +17,14 @@ import { NavState } from "../state";
  * they have on the configuration **is effectively preserved** despite the reset
  * of the configuration.
  */
-export type Step = (cur: NavState) => Promise<NavState>;
+export type StateTransition = (cur: NavState) => Promise<NavState>;
+export type Transition<T> = (cur: NavState) => Promise<T>;
+
+export interface Step<T> {
+    persistent: boolean;
+    description: string;
+    transition: Transition<T>;
+}
+
+export type SingleStep = Step<NavState>;
+export type MultiStep = Step<NavState[]>;

@@ -30,7 +30,7 @@ describe("Test header handling", () => {
         }),
     );
 
-    it.only(
+    it(
         "should add auth header as both an omni and non-omni step",
         usingMockAPI(async mock => {
             const nav = SirenNav.create("http://localhost/self-ref");

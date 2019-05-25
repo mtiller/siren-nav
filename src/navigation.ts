@@ -1,6 +1,6 @@
 import { NavState } from "./state";
 import { Config } from "./config";
-import { follow, Step, reduce, accept, auth, followLocation, header, goto } from "./steps";
+import { follow, StateTransition, reduce, accept, auth, followLocation, header, goto, SingleStep } from "./steps";
 import { Entity } from "siren-types";
 import { NavResponse } from "./response";
 import { performAction, getRequest } from "./requests";
@@ -49,7 +49,7 @@ export class SirenNav {
         };
 
         log("Creating SirenNav with initial URL of %s and base configuration of %j", uri, baseConfig);
-        return new SirenNav(Promise.resolve(new NavState(uri, undefined, baseConfig)), [], [], baseConfig);
+        return new SirenNav(Promise.resolve(new NavState(uri, undefined, baseConfig)), [], baseConfig);
     }
 
     /**
@@ -59,17 +59,12 @@ export class SirenNav {
      * we use static functions to create instances.
      *
      * @param {Promise<NavState>} start
-     * @param {Step[]} steps
+     * @param {StateTransition[]} steps
      *
      * @memberOf SirenNav
      */
-    private constructor(
-        private start: Promise<NavState>,
-        private steps: Step[],
-        private omni: Step[],
-        private baseConfig: Config,
-    ) {
-        log("  New SirenNav with %d steps, %d omni steps", steps.length, omni.length);
+    private constructor(private start: Promise<NavState>, private steps: SingleStep[], private baseConfig: Config) {
+        log("  New SirenNav with %d steps", steps.length);
     }
 
     /**
@@ -88,7 +83,7 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     follow(rel: string, parameters?: {}, which?: (states: NavState[]) => NavState): SirenNav {
-        return this.add(follow(rel, this.baseConfig, parameters, which));
+        return this.add(`Follow relation '${rel}'`, follow(rel, this.baseConfig, parameters, which));
     }
 
     /**
@@ -98,12 +93,12 @@ export class SirenNav {
      * @memberof SirenNav
      */
     followLocation(): SirenNav {
-        return this.add(followLocation(this.baseConfig));
+        return this.add(`Follow Location header`, followLocation(this.baseConfig));
     }
 
     followEach(rel: string, parameters?: {}): MultiNav {
         const multi = this.asMultiNav();
-        return multi.doMulti(followEach(rel, this.baseConfig, parameters));
+        return multi.doMulti(`Follow each relation of type ${rel}`, followEach(rel, this.baseConfig, parameters));
     }
 
     /**
@@ -132,7 +127,7 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     performAction<P>(name: string, body: P): NavResponse {
-        let state = reduce(this.start, [...this.steps, ...this.omni]);
+        let state = reduce(this.start, this.steps, []);
         let resp = state.then(s => performAction(name, body)(s));
         return NavResponse.create(resp);
     }
@@ -143,13 +138,18 @@ export class SirenNav {
      * navigation steps to be extensible.  Any transformation satisfying
      * the Step type can be incorporated into the navigation process.
      *
-     * @param {Step} step
+     * @param {StateTransition} step
      * @returns {SirenNav}
      *
      * @memberOf SirenNav
      */
-    add(step: Step): SirenNav {
-        return new SirenNav(this.start, [...this.steps, step], [...this.omni], this.baseConfig);
+    add(description: string, transition: StateTransition): SirenNav {
+        const step: SingleStep = {
+            persistent: false,
+            description: description,
+            transition: transition,
+        };
+        return new SirenNav(this.start, [...this.steps, step], this.baseConfig);
     }
 
     /**
@@ -157,8 +157,13 @@ export class SirenNav {
      * after the navigation steps.  This is also an internal method, but it is made
      * public to allow extensions.
      */
-    addOmni(step: Step): SirenNav {
-        return new SirenNav(this.start, [...this.steps], [...this.omni, step], this.baseConfig);
+    addPersistent(description: string, transition: StateTransition): SirenNav {
+        const step: SingleStep = {
+            persistent: true,
+            description: description,
+            transition: transition,
+        };
+        return new SirenNav(this.start, [...this.steps, step], this.baseConfig);
     }
 
     /**
@@ -182,9 +187,10 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     squash(): SirenNav {
-        const state = reduce(this.start, this.steps);
-        // NB - Note that we do NOT squash the omni steps.  Those remain.
-        return new SirenNav(state, [], [...this.omni], this.baseConfig);
+        const persisted = this.steps.filter(s => s.persistent);
+        const state = reduce(this.start, this.steps, []);
+        // NB - We keep the persistent steps after we squash these.
+        return new SirenNav(state, persisted, this.baseConfig);
     }
 
     /**
@@ -199,7 +205,7 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     goto(url: string, parameters?: {}): SirenNav {
-        return this.add(goto(url, this.baseConfig, parameters));
+        return this.add(`Goto URL '${url}'`, goto(url, this.baseConfig, parameters));
     }
 
     /**
@@ -208,7 +214,7 @@ export class SirenNav {
      * matters.
      */
     accept(ctype: string): SirenNav {
-        return this.add(accept(ctype));
+        return this.add(`Set Accept header to '${ctype}'`, accept(ctype));
     }
 
     /**
@@ -223,12 +229,14 @@ export class SirenNav {
      * @memberof SirenNav
      */
     auth(scheme: string, token: string, oneRequest?: boolean): SirenNav {
+        const description = `Set Authorization header to use scheme '${scheme}' and token '${token}'`;
+        const transition = auth(scheme, token);
         if (oneRequest) {
             log("  Adding auth as a one time only step");
-            return this.add(auth(scheme, token));
+            return this.add(description, transition);
         } else {
             log("  Adding auth as an omni step");
-            return this.addOmni(auth(scheme, token));
+            return this.addPersistent(description, transition);
         }
     }
 
@@ -241,7 +249,7 @@ export class SirenNav {
      * @memberof SirenNav
      */
     header(key: string, value: string): SirenNav {
-        return this.add(header(key, value));
+        return this.add(`Set header '${key}' to '${value}'`, header(key, value));
     }
 
     /**
@@ -253,7 +261,7 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     async getURL(parameters?: {}): Promise<string> {
-        const state = await reduce(this.start, [...this.steps, ...this.omni]);
+        const state = await reduce(this.start, this.steps, []);
         return normalizeUrl(state.cur, state.currentConfig.baseURL || null, parameters);
     }
 
@@ -266,8 +274,12 @@ export class SirenNav {
      * @memberOf SirenNav
      */
     get(): NavResponse {
-        let state = reduce(this.start, [...this.steps, ...this.omni]);
-        let resp = state.then(s => getRequest(s));
+        log("Processings get() request");
+        let state = reduce(this.start, this.steps, []);
+        let resp = state.then(s => {
+            log("  State when getRequest was called: %j", s);
+            return getRequest(s);
+        });
         return NavResponse.create(resp);
     }
 
@@ -303,6 +315,6 @@ export class SirenNav {
      */
     protected asMultiNav(): MultiNav {
         const starts: Promise<NavState[]> = this.start.then(v => [v]);
-        return new MultiNav(starts, this.steps.map(toMulti), this.omni, this.baseConfig);
+        return new MultiNav(starts, this.steps.map(toMulti), this.baseConfig);
     }
 }
