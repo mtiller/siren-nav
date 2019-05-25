@@ -26,7 +26,7 @@ describe("Test header handling", () => {
                 .asSiren();
             expect(mock.history.get).toHaveLength(1);
             expect(mock.history.get[0].headers).toHaveProperty("Accept");
-            // expect(mock.history.get[0].headers["Accept"]).toEqual("application/json");
+            expect(mock.history.get[0].headers["Accept"]).toEqual("application/json");
         }),
     );
 

@@ -60,31 +60,14 @@ async function applySteps(step: MultiStep, states: NavState[]): Promise<NavState
     return ret;
 }
 
-export function accept(ctype: string): Step {
-    return async (state: NavState): Promise<NavState> => {
-        debugSteps("Fetching data accepting only '%s' as content type", ctype);
-        debugSteps("  Resource: %s", state.cur);
-        let newconfig = { ...state.config };
-        if (!newconfig.headers) newconfig.headers = {};
-
-        if (newconfig.headers.hasOwnProperty("Accept")) {
-            let cur = newconfig.headers["Accept"];
-            debugSteps("  Current value of Accept: %s", cur);
-            // NB - We must create a new header object!
-            newconfig.headers = { ...state.config.headers, Accept: ctype + ", " + cur };
-        } else {
-            // NB - We must create a new header object!
-            newconfig.headers = { ...state.config.headers, Accept: ctype };
-        }
-        debugSteps("  Updated value of Accept: %s", newconfig.headers["Accept"]);
-        return new NavState(state.cur, undefined, newconfig);
-    };
-}
-
 export function header(key: string, value: string): Step {
     return async (state: NavState): Promise<NavState> => {
         return new NavState(state.cur, undefined, headerConfig(key, value)(state.config));
     };
+}
+
+export function accept(ctype: string): Step {
+    return header("Accept", ctype);
 }
 
 export function contentType(ctype: string): Step {
