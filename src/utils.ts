@@ -9,8 +9,8 @@ import * as URI from "urijs";
 import * as URIT from "urijs/src/URITemplate";
 
 export function getSiren(state: NavState): Promise<Siren> {
-    debugUtils("  getSiren for URL '%s' with config: ", state.cur, state.config);
-    return Promise.resolve(axios.get(state.cur, state.config)).then(resp => resp.data as Siren);
+    debugUtils("  getSiren for URL '%s' with state: %j", state.cur, state);
+    return Promise.resolve(axios.get(state.cur, state.currentConfig)).then(resp => resp.data as Siren);
 }
 
 export function normalizeUrl(href: string, base: string | null, parameters?: {}): string {

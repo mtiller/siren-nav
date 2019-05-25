@@ -19,12 +19,12 @@ export type Request = (cur: NavState) => Promise<ResponseData>;
 export function performAction<T extends {}>(name: string, body: T, parameters?: {}): Request {
     return async (state: NavState): Promise<AxiosResponse> => {
         debugRequests("Performing action %s on %s", name, state.cur);
-        debugRequests("  Fetching latest version of %s with config %j", state.cur, state.config);
+        debugRequests("  Fetching with current state of: %j", state);
         const resp = await getRequest(state);
         let siren: Siren = resp.data as Siren;
         // We may need to tweak the config, so let's start with the config of
         // the NavState
-        let request = state.config;
+        let request = state.currentConfig;
 
         debugRequests("  Latest value of %s: %j", siren, state.cur);
 
@@ -71,9 +71,9 @@ export function performAction<T extends {}>(name: string, body: T, parameters?: 
 }
 
 export const getRequest: Request = async (state: NavState): Promise<ResponseData> => {
-    debugRequests("Requesting %s", state.cur);
-    debugRequests("  Fetching latest resource at %s with config %j", state.cur, state.config);
-    return axios.get(state.cur, state.config).then(v => {
+    debugRequests("Requesting %s, current state is: %j", state.cur, state);
+    debugRequests("  Fetching latest resource at %s with config %j", state.cur, state.currentConfig);
+    return axios.get(state.cur, state.currentConfig).then(v => {
         debugRequests("  ResponseData for %s: %j", state.cur, v);
         return v;
     });

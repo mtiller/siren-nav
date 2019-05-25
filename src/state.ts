@@ -4,7 +4,7 @@ import { normalizeUrl } from "./utils";
 
 export class NavState {
     public readonly cur: string;
-    constructor(href: string, parameters: {} | undefined, public config: Config) {
+    constructor(href: string, parameters: {} | undefined, public currentConfig: Config) {
         this.cur = normalizeUrl(href, null, parameters);
     }
     /**
