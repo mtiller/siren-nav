@@ -1,7 +1,7 @@
 import { NavState } from "./state";
 import { Config } from "./config";
 import { follow, StateTransition, reduce, accept, auth, followLocation, header, goto, SingleStep } from "./steps";
-import { Entity } from "siren-types";
+import { Entity, Properties } from "siren-types";
 import { NavResponse } from "./response";
 import { performAction, getRequest } from "./requests";
 import { sirenContentType } from "siren-types";
@@ -112,7 +112,7 @@ export class SirenNav {
      *
      * @memberOf SirenNav
      */
-    performHyperAction<P extends {}>(name: string, body: Entity<P>): NavResponse {
+    performHyperAction<P extends Properties>(name: string, body: Entity<P>): NavResponse {
         return this.performAction(name, body);
     }
 

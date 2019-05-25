@@ -11,3 +11,9 @@ Object {
   "links": Array [],
 }
 `;
+
+exports[`Action tests should perform a hypermedia action 1`] = `
+Object {
+  "links": Array [],
+}
+`;

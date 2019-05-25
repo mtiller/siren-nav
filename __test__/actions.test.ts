@@ -24,6 +24,18 @@ describe("Action tests", () => {
             expect(mock.history.get[1].data).toEqual("?term=home&x=5");
         }),
     );
+    it(
+        "should perform a hypermedia action",
+        usingMockAPI(async mock => {
+            const nav = SirenNav.create("http://localhost/api");
+            const foo = nav.performHyperAction<undefined>("query", {
+                properties: undefined,
+                links: [],
+            });
+            const r1 = await foo.asSiren();
+            expect(r1).toMatchSnapshot();
+        }),
+    );
     it.skip(
         "should perform a POST action",
         usingMockAPI(async () => {
