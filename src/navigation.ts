@@ -209,10 +209,18 @@ export class SirenNav {
     }
 
     /**
-     * Authorize requests using the given scheme and token
+     * This method injects an authorization header.  Note, that it does this for
+     * all subsequent requests made by this SirenNav instance *unless* you
+     * set the `oneRequest` argument to `true`.
+     *
+     * @param {string} scheme
+     * @param {string} token
+     * @param {boolean} [oneRequest] Use auth header only for one request.
+     * @returns {SirenNav}
+     * @memberof SirenNav
      */
-    auth(scheme: string, token: string): SirenNav {
-        return this.do(auth(scheme, token));
+    auth(scheme: string, token: string, oneRequest?: boolean): SirenNav {
+        return oneRequest ? this.do(auth(scheme, token)) : this.doOmni(auth(scheme, token));
     }
 
     /**
