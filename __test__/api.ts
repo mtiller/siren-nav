@@ -1,5 +1,10 @@
 import MockAdapter from "axios-mock-adapter";
 import axios from "axios";
+import { Siren } from "siren-types";
+
+function s(obj: Siren): Siren {
+    return obj;
+}
 
 export function usingMockAPI(tests: (mock: MockAdapter) => Promise<void>) {
     return async () => {
@@ -18,37 +23,87 @@ export function usingMockAPI(tests: (mock: MockAdapter) => Promise<void>) {
                 Location: "http://localhost/bar",
             },
         );
-        mock.onGet("http://localhost/bar").reply(200, {
-            properties: {
-                message: "I am bar",
-            },
-        });
+        mock.onGet("http://localhost/bar").reply(
+            200,
+            s({
+                properties: {
+                    message: "I am bar",
+                },
+            }),
+        );
 
         //// Resources that involve templates
-        mock.onGet("http://localhost/search-template").reply(200, {
-            properties: undefined,
-            links: [{ rel: ["search"], href: "/model/{model}" }],
-        });
+        mock.onGet("http://localhost/search-template").reply(
+            200,
+            s({
+                properties: undefined,
+                links: [{ rel: ["search"], href: "/model/{model}" }],
+            }),
+        );
 
         //// Resources that provide collections
-        mock.onGet("http://localhost/collection").reply(200, {
-            properties: undefined,
-            links: [{ rel: ["item"], href: "/model/1" }, { rel: ["item"], href: "/model/2" }],
-        });
-        mock.onGet("http://localhost/model/1").reply(200, {
-            properties: { id: 1 },
-            links: [{ rel: ["collection"], href: "/collection" }],
-        });
-        mock.onGet("http://localhost/model/2").reply(200, {
-            properties: { id: 2 },
-            links: [{ rel: ["collection"], href: "/collection" }],
-        });
+        mock.onGet("http://localhost/collection").reply(
+            200,
+            s({
+                properties: undefined,
+                links: [{ rel: ["item"], href: "/model/1" }, { rel: ["item"], href: "/model/2" }],
+            }),
+        );
+        mock.onGet("http://localhost/model/1").reply(
+            200,
+            s({
+                properties: { id: 1 },
+                links: [{ rel: ["collection"], href: "/collection" }],
+            }),
+        );
+        mock.onGet("http://localhost/model/2").reply(
+            200,
+            s({
+                properties: { id: 2 },
+                links: [{ rel: ["collection"], href: "/collection" }],
+            }),
+        );
 
         //// A self referential resource
-        mock.onGet("http://localhost/self-ref").reply(200, {
-            properties: undefined,
-            links: [{ rel: ["self"], href: "http://localhost/self-ref" }],
-        });
+        mock.onGet("http://localhost/self-ref").reply(
+            200,
+            s({
+                properties: undefined,
+                links: [{ rel: ["self"], href: "http://localhost/self-ref" }],
+            }),
+        );
+
+        mock.onGet("http://localhost/api").reply(
+            200,
+            s({
+                properties: undefined,
+                actions: [
+                    {
+                        name: "query",
+                        href: "/api/query",
+                    },
+                    {
+                        name: "create",
+                        href: "/api/create",
+                        method: "POST",
+                        type: "application/json",
+                    },
+                ],
+            }),
+        );
+        mock.onGet("http://localhost/api/query").reply(
+            200,
+            s({
+                properties: undefined,
+                links: [],
+            }),
+        );
+        mock.onPost("http://localhost/api/create").reply(
+            200,
+            s({
+                properties: undefined,
+            }),
+        );
 
         try {
             await tests(mock);

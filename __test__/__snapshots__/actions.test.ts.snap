@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Action tests should perform a GET action with arguments 1`] = `
+Object {
+  "links": Array [],
+}
+`;
+
+exports[`Action tests should perform a GET action without arguments 1`] = `
+Object {
+  "links": Array [],
+}
+`;
