@@ -4,8 +4,8 @@ import axios from "axios";
 import { AxiosResponse } from "axios";
 
 import * as debug from "debug";
-import { contentTypeConfig } from "./config";
 import { normalizeUrl, formulateData } from "./utils";
+import { headerConfig } from "./config";
 const debugRequests = debug("siren-nav:requests");
 
 export interface ResponseData {
@@ -51,11 +51,12 @@ export function performAction<T extends {}>(name: string, body: T, parameters?: 
         // in the request.
         if (action.type) {
             debugRequests("    Content-Type set to %s", action.type);
-            request = contentTypeConfig(action.type)(request);
+            request = headerConfig("Content-Type", action.type)(request);
         }
 
         // Specify the method associated with the action (or fallback to "get")
-        request = { ...request, method: action.method || "get" };
+        // Note that axios expects "get" or "post" (i.e., no GET, no POST).
+        request = { ...request, method: (action.method || "get").toLowerCase() };
 
         let url = normalizeUrl(action.href, state.cur, parameters);
 

@@ -6,11 +6,21 @@ Object {
 }
 `;
 
+exports[`Action tests should perform a GET action with stringified arguments 1`] = `
+Object {
+  "links": Array [],
+}
+`;
+
 exports[`Action tests should perform a GET action without arguments 1`] = `
 Object {
   "links": Array [],
 }
 `;
+
+exports[`Action tests should perform a POST action 1`] = `Object {}`;
+
+exports[`Action tests should perform a POST action with a string body 1`] = `Object {}`;
 
 exports[`Action tests should perform a hypermedia action 1`] = `
 Object {

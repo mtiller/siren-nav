@@ -9,6 +9,8 @@ export type Configurator = (cur: Config) => Config;
 export const headerConfig = (key: string, value: string): Configurator => {
     return (config: Config) => {
         let newconfig = { ...config };
+
+        // istanbul ignore next (never happens because we always initialize this)
         if (!newconfig.headers) newconfig.headers = {};
 
         // NB - We must create a new header object!
@@ -18,12 +20,4 @@ export const headerConfig = (key: string, value: string): Configurator => {
         debugConfig("  Set header '%s' to '%s'", key, newconfig.headers[key]);
         return newconfig;
     };
-};
-
-export const contentTypeConfig = (value: string): Configurator => {
-    return headerConfig("Content-Type", value);
-};
-
-export const acceptConfig = (value: string): Configurator => {
-    return headerConfig("Accept", value);
 };

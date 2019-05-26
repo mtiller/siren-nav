@@ -27,10 +27,15 @@ export function normalizeUrl(href: string, base: string | null, parameters?: {})
 
 export function formulateData(action: Action, body: {}): {} | string {
     const type = action.type;
+    debugUtils("  Formulating data, type = %s", action.type);
+    debugUtils("    Action = %j", action);
+    debugUtils("    typeof body = %s", typeof body);
+    debugUtils("    body = %j", body);
+
     // Is there a type specified other than urlencoded?  If so, we just use body
     if (type && type !== "application/x-www-form-urlencoded") return body;
 
-    // Ensure he body exists and it is an object
+    // Ensure the body exists and it is an object
     if (!body || typeof body != "object") return body;
 
     // URL encode field of body.
