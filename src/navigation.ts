@@ -5,11 +5,12 @@ import { Entity, Properties } from "siren-types";
 import { NavResponse } from "./response";
 import { performAction, getRequest } from "./requests";
 import { sirenContentType } from "siren-types";
-import { Observable } from "rxjs";
+import { Observable, Subscriber } from "rxjs";
 import { MultiNav } from "./multi/multinav";
 
 import { followEach, toMulti } from "./multi/multistep";
 import { normalizeUrl } from "./utils";
+import * as WebSocket from "ws";
 
 import * as debug from "debug";
 const log = debug("siren:nav");
@@ -283,25 +284,49 @@ export class SirenNav {
         return NavResponse.create(resp);
     }
 
+    private async connectObserver<T>(observer: Subscriber<Entity<T>>) {
+        // Follow rel
+        // Get URL
+        const url = await this.getURL();
+        log("Attempting to subscribe to %s", url);
+
+        if (url.startsWith("ws:" || url.startsWith("wss:"))) {
+            log("Opening web socket");
+            const ws = new WebSocket(url);
+            ws.onmessage = msg => {
+                log("Websocket listening to %s got %j", url, Object.keys(msg));
+                log("  Target: %j", msg.target);
+                log("  Type: %j", msg.type);
+                log("  Data: %j", msg.data);
+                observer.next(JSON.parse(msg.data as any) as any);
+            };
+            ws.onerror = e => {
+                log("Websocket listening to %s got error %j", url, e);
+                observer.error(e);
+            };
+        } else {
+            // Handle event source case
+            const source = new EventSource(url);
+            source.onmessage = msg => {
+                log("EventSource listening to %s got %j", url, msg);
+                observer.next(msg as any);
+            };
+            // TODO: Distinguish between close and error
+            source.onerror = e => {
+                log("EventSource listening to %s got error %j", url, e);
+                observer.error(e);
+            };
+        }
+    }
+
     // TODO: Test this
-    subscribe<T>(rel?: string, poll?: number): Observable<Entity<T>> {
+    subscribe<T>(poll?: number): Observable<Entity<T>> {
         return new Observable(observer => {
-            observer.complete();
-            (async () => {
-                // Follow rel
-                // Get URL
-                const url = await this.follow(rel || "events").getURL();
-                if (url.startsWith("ws:" || url.startsWith("wss:"))) {
-                    throw new Error("Unimplemented");
-                    // Handle web socket case
-                } else {
-                    // Handle event source case
-                    const source = new EventSource(url);
-                    source.onmessage = msg => observer.next(msg as any);
-                    // TODO: Distinguish between close and error
-                    source.onerror = e => observer.error(e);
-                }
-            })();
+            this.connectObserver(observer).catch(e => {
+                console.error("An error occurred while subscribing:");
+                console.error(e);
+                observer.error(e);
+            });
         });
     }
 

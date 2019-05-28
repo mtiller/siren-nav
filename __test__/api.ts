@@ -7,7 +7,7 @@ function s(obj: Siren): Siren {
 }
 
 export function usingMockAPI(tests: (mock: MockAdapter) => Promise<void>) {
-    return async () => {
+    return async (): Promise<void> => {
         const mock = new MockAdapter(axios);
 
         //// Resources that deal with redirection and location headers
