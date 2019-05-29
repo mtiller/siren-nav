@@ -107,6 +107,15 @@ export function usingMockAPI(tests: (mock: MockAdapter) => Promise<void>) {
                 properties: undefined,
             }),
         );
+        const msg1: Siren = { properties: { message: "My message" } };
+        const msg2: Siren = { properties: { message: "Another message" } };
+        mock.onGet("http://localhost/sse").reply(
+            200,
+            `data: ${JSON.stringify(msg1)}\n\ndata: ${JSON.stringify(msg2)}\n\n`,
+            {
+                "Content-Type": "text/event-stream",
+            },
+        );
 
         try {
             await tests(mock);

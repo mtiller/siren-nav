@@ -300,6 +300,11 @@ export class SirenNav {
                 log("  Data: %j", msg.data);
                 observer.next(JSON.parse(msg.data as any) as any);
             };
+            ws.onclose = () => {
+                log("Websocket listening to %s closed", url);
+                observer.complete();
+            };
+            // istanbul ignore next (not sure how to force such an error)
             ws.onerror = e => {
                 log("Websocket listening to %s got error %j", url, e);
                 observer.error(e);
@@ -322,11 +327,13 @@ export class SirenNav {
     // TODO: Test this
     subscribe<T>(poll?: number): Observable<Entity<T>> {
         return new Observable(observer => {
-            this.connectObserver(observer).catch(e => {
-                console.error("An error occurred while subscribing:");
-                console.error(e);
-                observer.error(e);
-            });
+            this.connectObserver(observer).catch(
+                /* istanbul ignore next */ e => {
+                    console.error("An error occurred while subscribing:");
+                    console.error(e);
+                    observer.error(e);
+                },
+            );
         });
     }
 
