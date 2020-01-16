@@ -3148,10 +3148,10 @@ signal-exit@^3.0.0, signal-exit@^3.0.2:
   resolved "https://registry.npmjs.org/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
   integrity sha1-tf3AjxKH6hF4Yo5BXiUTK3NkbG0=
 
-siren-types@1.0.0-rc7:
-  version "1.0.0-rc7"
-  resolved "https://registry.npmjs.org/siren-types/-/siren-types-1.0.0-rc7.tgz#f592090fcbb2af15bd23247496b27c90b49fd052"
-  integrity sha512-Zt/+BsZoAmIP8y3q2qR+hBGfO1XHPIFtZHSLvQrGi4ecmEUHzoxsYv1MJMb/nv+uDMAwur8B1WO56qiwGwZL6Q==
+siren-types@1.0.0-rc10:
+  version "1.0.0-rc10"
+  resolved "https://registry.yarnpkg.com/siren-types/-/siren-types-1.0.0-rc10.tgz#b4ed8779060daae73f031b8d9a25d4b34d4f335b"
+  integrity sha512-tilWDQ3pxOmueNXVg713JzClb1qPZEkdXfwUtwsw3PYvDjTydiO8tnRmXWodoXMdUSZCXqi7ELrqCH6OmoelBA==
 
 sisteransi@^1.0.0:
   version "1.0.0"
@@ -3554,10 +3554,10 @@ type-check@~0.3.2:
   dependencies:
     prelude-ls "~1.1.2"
 
-typescript@3.1.6:
-  version "3.1.6"
-  resolved "https://registry.npmjs.org/typescript/-/typescript-3.1.6.tgz#b6543a83cfc8c2befb3f4c8fba6896f5b0c9be68"
-  integrity sha512-tDMYfVtvpb96msS1lDX9MEdHrW4yOuZ4Kdc4Him9oU796XldPYF/t2+uKoX0BBa0hXXwDlqYQbXY5Rzjzc5hBA==
+typescript@3.7.2:
+  version "3.7.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.7.2.tgz#27e489b95fa5909445e9fef5ee48d81697ad18fb"
+  integrity sha512-ml7V7JfiN2Xwvcer+XAf2csGO1bPBdRbFCkYBczNZggrBZ9c7G3riSUeJmqEU5uOtXNPMhE3n+R4FA/3YOAWOQ==
 
 uglify-js@^3.1.4:
   version "3.5.12"
