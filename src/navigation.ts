@@ -45,13 +45,18 @@ export class SirenNav {
    * @memberOf SirenNav
    */
   static create(url: string, config?: Config) {
-    config = config || {};
+    config = config || { flatten: true };
 
     const uri = normalizeUrl(url, null);
     const baseConfig: Config = {
       headers: {
         Accept: sirenContentType // Assume siren unless the user overrides it
       },
+      // By default, we assume that any nested object passed as data to an
+      // action and serialized as a query string should be flattened.  If false,
+      // then the normal axios process of encoding nested objects as strings
+      // will be applied.
+      flatten: true,
       // Commented out because it causes problems with HTTPS
       // APIs that don't require authentication (for reasons
       // I'm not 100% sure about).
@@ -147,9 +152,10 @@ export class SirenNav {
    */
   performHyperAction<P extends Properties | undefined>(
     name: string,
-    body: Entity<P>
+    body: Entity<P>,
+    parameters?: {}
   ): NavResponse {
-    return this.performAction(name, body);
+    return this.performAction(name, body, parameters);
   }
 
   /**
@@ -162,9 +168,11 @@ export class SirenNav {
    *
    * @memberOf SirenNav
    */
-  performAction<P>(name: string, body: P): NavResponse {
+  performAction<P>(name: string, body: P, parameters?: {}): NavResponse {
     let state = reduce(this.start, this.steps, []);
-    let resp = state.then(s => performAction(name, body)(s));
+    let resp = state.then(s =>
+      performAction(name, body, this.baseConfig, parameters)(s)
+    );
     return NavResponse.create(resp);
   }
 

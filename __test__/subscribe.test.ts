@@ -18,13 +18,18 @@ describe("Subscription tests", () => {
         messages.push(msg.properties.message);
       });
 
-      await new Promise(resolve => {
-        setTimeout(() => {
-          resolve(undefined);
-        }, 500);
-      });
+      try {
+        await new Promise(resolve => {
+          setTimeout(() => {
+            resolve(undefined);
+          }, 500);
+        });
+      } catch (e) {
+        console.error(e);
+      } finally {
+        foo.unsubscribe();
+      }
       expect(messages).toEqual(["My message", "Another message"]);
-      foo.unsubscribe();
     })
   );
   it("should subscribe to a web socket that closes properly", async () => {

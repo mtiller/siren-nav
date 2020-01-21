@@ -3,7 +3,7 @@ import { AxiosRequestConfig } from "axios";
 import debug from "debug";
 const log = debug("siren-nav:config");
 
-export type Config = AxiosRequestConfig;
+export type Config = AxiosRequestConfig & { flatten: boolean };
 export type Configurator = (cur: Config) => Config;
 
 export const headerConfig = (key: string, value: string): Configurator => {

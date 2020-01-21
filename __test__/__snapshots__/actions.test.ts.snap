@@ -1,20 +1,57 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Action tests should perform a GET action with arguments 1`] = `
+exports[`Action tests should perform a GET action with already stringified arguments 1`] = `
 Object {
   "links": Array [],
+  "properties": Object {
+    "case": 2,
+    "flattened": false,
+    "queryString": true,
+  },
 }
 `;
 
-exports[`Action tests should perform a GET action with stringified arguments 1`] = `
+exports[`Action tests should perform a GET action with arguments 1`] = `
 Object {
   "links": Array [],
+  "properties": Object {
+    "case": 2,
+    "flattened": false,
+    "queryString": true,
+  },
+}
+`;
+
+exports[`Action tests should perform a GET action with nested arguments and flattening 1`] = `
+Object {
+  "links": Array [],
+  "properties": Object {
+    "case": 3,
+    "flattened": true,
+    "queryString": true,
+  },
+}
+`;
+
+exports[`Action tests should perform a GET action with nested arguments but no flattening 1`] = `
+Object {
+  "links": Array [],
+  "properties": Object {
+    "case": 4,
+    "flattened": false,
+    "queryString": true,
+  },
 }
 `;
 
 exports[`Action tests should perform a GET action without arguments 1`] = `
 Object {
   "links": Array [],
+  "properties": Object {
+    "case": 1,
+    "flattened": false,
+    "queryString": false,
+  },
 }
 `;
 
@@ -25,5 +62,10 @@ exports[`Action tests should perform a POST action with a string body 1`] = `Obj
 exports[`Action tests should perform a hypermedia action 1`] = `
 Object {
   "links": Array [],
+  "properties": Object {
+    "case": 5,
+    "flattened": true,
+    "queryString": true,
+  },
 }
 `;

@@ -3,9 +3,13 @@ import { Siren } from "siren-types";
 import axios from "axios";
 import { AxiosResponse } from "axios";
 
+import { flatten } from "flat";
+
+import URI from "urijs";
+
 import debug from "debug";
-import { normalizeUrl, urlEncoded, buildQueryString } from "./utils";
-import { headerConfig } from "./config";
+import { normalizeUrl, urlEncoded } from "./utils";
+import { headerConfig, Config } from "./config";
 const log = debug("siren-nav:requests");
 
 export interface ResponseData {
@@ -14,11 +18,16 @@ export interface ResponseData {
   status: number;
 }
 
+export interface ActionOptions {
+  flatten?: boolean;
+}
+
 export type Request = (cur: NavState) => Promise<ResponseData>;
 
 export function performAction<T extends {}>(
   name: string,
   body: T,
+  config: Config,
   parameters?: {}
 ): Request {
   return async (state: NavState): Promise<AxiosResponse> => {
@@ -30,7 +39,7 @@ export function performAction<T extends {}>(
     // the NavState
     let request = state.currentConfig;
 
-    log("  Latest value of %s: %j", siren, state.cur);
+    log("  Latest value of %j: %j", siren, state.cur);
 
     if (!siren.actions) {
       log("  ERROR: no actions defined in %s", state.cur);
@@ -68,10 +77,27 @@ export function performAction<T extends {}>(
     let url = normalizeUrl(action.href, state.cur, parameters);
 
     if (urlEncoded(action)) {
-      const qs = typeof body === "string" ? body : buildQueryString(body, true);
-      log("  Encoding data with query string: %s", qs);
-      // Add only URL but concatenate with query string
-      request = { ...request, url: url + qs };
+      if (typeof body === "string") {
+        request = { ...request, url: url + body };
+        log("  Encoding data with provided query string: %s", body);
+      } else {
+        if (config.flatten) {
+          const fqs = flatten(body) as {};
+          log("  Encoding data as flattened query string using: %j", fqs);
+          const qs = new URI("").search(fqs).toString();
+          log("  Query string being used: %s", qs);
+          request = { ...request, url: url + qs };
+        } else {
+          log("  Encoding data with unflattened query string using: %j", body);
+          const params = Object.keys(body).reduce((p, val) => {
+            p[val] = JSON.stringify(body[val]);
+            return p;
+          }, {} as { [key: string]: string });
+          const qs = new URI("").search(params).toString();
+          log("  Query string being used: %s", qs);
+          request = { ...request, url: url + qs };
+        }
+      }
     } else {
       // Add URL and data to request
       log("  Encoding data as JSON in body: %j", body);

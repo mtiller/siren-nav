@@ -2,8 +2,6 @@ import { Siren, Action } from "siren-types";
 import { NavState } from "./state";
 import axios from "axios";
 
-import flat from "flat";
-
 import debug from "debug";
 const debugUtils = debug("siren-nav:utils");
 
@@ -36,15 +34,6 @@ export function normalizeUrl(
   }
   debugUtils("  Absolute URL: %s", url.toString());
   return url.toString();
-}
-
-export function buildQueryString(body: {}, flatten: boolean): string {
-  if (flatten) {
-    // URL encode field of body.
-    return new URI("").search(flat(body)).toString();
-  }
-  // URL encode field of body.
-  return new URI("").search(body).toString();
 }
 
 export function urlEncoded(action: Action): boolean {

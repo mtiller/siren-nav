@@ -103,7 +103,11 @@ export function usingMockAPI(tests: (mock: MockAdapter) => Promise<void>) {
     mock.onGet("http://localhost/api/query").reply(
       200,
       s({
-        properties: undefined,
+        properties: {
+          case: 1,
+          queryString: false,
+          flattened: false
+        },
         links: []
       })
     );
@@ -111,10 +115,54 @@ export function usingMockAPI(tests: (mock: MockAdapter) => Promise<void>) {
     mock.onGet("http://localhost/api/query?term=home&x=5").reply(
       200,
       s({
-        properties: undefined,
+        properties: {
+          case: 2,
+          queryString: true,
+          flattened: false
+        },
         links: []
       })
     );
+
+    mock.onGet("http://localhost/api/query?parent.child=5").reply(
+      200,
+      s({
+        properties: {
+          case: 3,
+          queryString: true,
+          flattened: true
+        },
+        links: []
+      })
+    );
+
+    mock.onGet("http://localhost/api/query?parent=%7B%22child%22%3A5%7D").reply(
+      200,
+      s({
+        properties: {
+          case: 4,
+          queryString: true,
+          flattened: false
+        },
+        links: []
+      })
+    );
+
+    mock
+      .onGet(
+        "http://localhost/api/query?properties.x=5&links.0.rel.0=item&links.0.href=%2Ffoo"
+      )
+      .reply(
+        200,
+        s({
+          properties: {
+            case: 5,
+            queryString: true,
+            flattened: true
+          },
+          links: []
+        })
+      );
 
     mock.onPost("http://localhost/api/create").reply(
       200,
