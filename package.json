@@ -5,7 +5,7 @@
     "main": "lib/src/index.js",
     "typings": "lib/src/index.d.ts",
     "scripts": {
-        "compile": "tsc",
+        "build": "tsc",
         "prepublish": "tsc",
         "test": "jest --runInBand"
     },
@@ -21,6 +21,7 @@
     "license": "MIT",
     "devDependencies": {
         "@types/debug": "^0.0.30",
+        "@types/flat": "^0.0.28",
         "@types/jest": "^24.0.12",
         "@types/urijs": "^1.19.0",
         "@types/ws": "^6.0.1",
@@ -34,6 +35,7 @@
     "dependencies": {
         "axios": "^0.16.0",
         "debug": "^3.1.0",
+        "flat": "^5.0.0",
         "rxjs": "^6.5.2",
         "siren-types": "1.0.0-rc10",
         "urijs": "^1.19.1"

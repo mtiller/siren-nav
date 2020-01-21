@@ -82,7 +82,9 @@ export function usingMockAPI(tests: (mock: MockAdapter) => Promise<void>) {
     mock.onGet("http://localhost/api").reply(
       200,
       s({
-        properties: undefined,
+        properties: {
+          queryString: false
+        },
         actions: [
           {
             name: "query",
@@ -97,6 +99,7 @@ export function usingMockAPI(tests: (mock: MockAdapter) => Promise<void>) {
         ]
       })
     );
+
     mock.onGet("http://localhost/api/query").reply(
       200,
       s({
@@ -104,6 +107,15 @@ export function usingMockAPI(tests: (mock: MockAdapter) => Promise<void>) {
         links: []
       })
     );
+
+    mock.onGet("http://localhost/api/query?term=home&x=5").reply(
+      200,
+      s({
+        properties: undefined,
+        links: []
+      })
+    );
+
     mock.onPost("http://localhost/api/create").reply(
       200,
       s({

@@ -14,9 +14,6 @@ Object {
   "class": Array [],
   "entities": Array [],
   "links": Array [],
-  "properties": Object {
-    "message": "I am bar",
-  },
   "title": null,
 }
 `;

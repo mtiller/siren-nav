@@ -20,9 +20,9 @@ import { MultiNav } from "./multi/multinav";
 
 import { followEach, toMulti } from "./multi/multistep";
 import { normalizeUrl } from "./utils";
-import * as WebSocket from "ws";
+import WebSocket from "ws";
 
-import * as debug from "debug";
+import debug from "debug";
 const log = debug("siren:nav");
 
 /**
