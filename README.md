@@ -38,7 +38,7 @@ up until an actual request is to be made.  In this example, that is the `perform
 call.  This necessarily must perform a (`POST`) request and returns a `NavResponse` object.
 Again, note that this is not itself a promise of anything, but intead a "holder" of a 
 promise to the result.  The actual request could have been requested (via the `get` or 
-`getSiren` methods).  But in this case, the `followLocation` method transforms returns
+`getSiren` methods).  But in this case, the `followLocation` method initiates a new request that returns
 a fresh `SirenNav` instance.  In other words, the chaining continues by turning a 
 `SirenNav` instance into a `NavResponse` instance and back again into a `SirenNav` 
 instance.
