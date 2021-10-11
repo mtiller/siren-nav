@@ -36,7 +36,7 @@ which the current state (whatever that happens to be) can be transformed into th
 next step *without actually doing it*.  These chains of state transformations are stored 
 up until an actual request is to be made.  In this example, that is the `performHyperAction`
 call.  This necessarily must perform a (`POST`) request and returns a `NavResponse` object.
-Again, not that this is not itself a promise of anything, but intead a "holder" of a 
+Again, note that this is not itself a promise of anything, but intead a "holder" of a 
 promise to the result.  The actual request could have been requested (via the `get` or 
 `getSiren` methods).  But in this case, the `followLocation` method transforms returns
 a fresh `SirenNav` instance.  In other words, the chaining continues by turning a 
