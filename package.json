@@ -29,13 +29,13 @@
         "jest": "^24.8.0",
         "ts-jest": "^24.0.2",
         "ts-node": "^2.0.0",
-        "typescript": "3.7.2",
-        "ws": "^7.0.0"
+        "typescript": "3.7.2"
     },
     "dependencies": {
         "axios": "^0.16.0",
         "debug": "^3.1.0",
         "flat": "^5.0.0",
+        "isomorphic-ws": "^5.0.0",
         "rxjs": "^6.5.2",
         "siren-types": "1.0.0-rc10",
         "urijs": "^1.19.1"

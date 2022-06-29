@@ -20,7 +20,7 @@ import { MultiNav } from "./multi/multinav";
 
 import { followEach, toMulti } from "./multi/multistep";
 import { normalizeUrl } from "./utils";
-import WebSocket from "ws";
+import WebSocket from "isomorphic-ws";
 
 import debug from "debug";
 const log = debug("siren:nav");
