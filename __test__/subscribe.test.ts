@@ -81,7 +81,11 @@ describe("Subscription tests", () => {
     wss.on("connection", function connection(ws) {
       log("Connection event");
       const send = (msg: string) => {
-        ws.send(JSON.stringify({ properties: { message: msg } }));
+        try {
+          ws.send(JSON.stringify({ properties: { message: msg } }));
+        } catch (e) {
+          log(`Failed to send a message ${msg}`)
+        }
       };
       log("Sending...");
       setTimeout(() => ws.close(), 700);
@@ -89,7 +93,7 @@ describe("Subscription tests", () => {
       setTimeout(() => send("another thing"), 500);
       setTimeout(() => {
         log("Last message sent");
-        send("one other thing");
+        send("one other thing, expect to fail");
       }, 800);
     });
 
